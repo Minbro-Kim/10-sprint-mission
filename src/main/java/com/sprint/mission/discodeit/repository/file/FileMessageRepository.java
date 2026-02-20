@@ -101,6 +101,7 @@ public class FileMessageRepository implements MessageRepository {
     @Override
     public Optional<Message> findLastMessageByChannelId(UUID channelId) {
         return findAll().stream()
+                .filter(m->m.getChannelId().equals(channelId))
                 .max(Comparator.comparing(Message::getCreatedAt));
     }
 
