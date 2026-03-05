@@ -31,30 +31,30 @@ public class BinaryContentController {
 
     private final BinaryContentService binaryContentService;
 
-    @Operation(summary = "첨부 파일 조회", operationId = "find")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "첨부 파일 조회 성공"),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "첨부 파일을 찾을 수 없음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "fieldErrors": null,
-                                      "violationErrors": null,
-                                      "code": 404,
-                                      "message": "존재하지 않는 채널"
-                                    }
-                                """)
-                    )
-            )
-    })
-    @GetMapping(path = "/{binaryContentId}")
-    public ResponseEntity<BinaryContent> findProfileImage(@PathVariable UUID binaryContentId) {
-        return ResponseEntity.status(HttpStatus.OK).body(binaryContentService.find(binaryContentId));
-    }
+  @Operation(summary = "첨부 파일 조회", operationId = "find")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "첨부 파일 조회 성공"),
+      @ApiResponse(
+          responseCode = "404",
+          description = "첨부 파일을 찾을 수 없음",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class),
+              examples = @ExampleObject(value = """
+                      {
+                        "fieldErrors": null,
+                        "violationErrors": null,
+                        "code": 404,
+                        "message": "존재하지 않는 바이너리 컨텐츠"
+                      }
+                  """)
+          )
+      )
+  })
+  @GetMapping(path = "/{binaryContentId}")
+  public ResponseEntity<BinaryContentDto> findProfileImage(@PathVariable UUID binaryContentId) {
+    return ResponseEntity.status(HttpStatus.OK).body(binaryContentService.find(binaryContentId));
+  }
 
     @Operation(summary = "여러 첨부 파일 조회", operationId = "findAllByIdIn",
                 parameters = @Parameter(name = "binaryContentIds",description = "조회할 첨부 파일 ID 목록"))
