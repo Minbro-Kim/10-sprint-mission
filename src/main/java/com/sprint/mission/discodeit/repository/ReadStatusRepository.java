@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
 
   List<ReadStatus> findAllByUserId(UUID userId);
 
-  List<ReadStatus> findAllByChannelId(UUID channelId);
+  @Query("select r from ReadStatus r join fetch r.user where r.channel.id = :channelId")
+  List<ReadStatus> findAllByChannelIdFetchUser(UUID channelId);
 
   Optional<ReadStatus> findByUserIdAndChannelId(UUID userId, UUID channelId);
 

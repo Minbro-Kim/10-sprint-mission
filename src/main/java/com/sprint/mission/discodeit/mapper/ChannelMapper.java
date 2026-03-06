@@ -42,7 +42,7 @@ public abstract class ChannelMapper {
         channel.getCreatedAt(),
         channel.getUpdatedAt(),
         lastMessage == null ? null : lastMessage.getCreatedAt(),//아직 채널에 메세지가 없는 경우 null
-        readStatusRepository.findAllByChannelId(channel.getId()).stream()
+        readStatusRepository.findAllByChannelIdFetchUser(channel.getId()).stream()//유저 정보 같이 가져오기
             .map(s -> userMapper.toDto(s.getUser())).toList()
     );
   }
