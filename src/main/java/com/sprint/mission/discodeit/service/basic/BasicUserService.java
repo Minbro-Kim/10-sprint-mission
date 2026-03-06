@@ -78,7 +78,8 @@ public class BasicUserService implements UserService {
   @Override
   public UserDto update(UUID userId, UserUpdateRequest dto,
       Optional<BinaryContentCreateDto> binaryContentCreateDto) {
-    User user = get(userId);
+    User user = userRepository.findByIdFetchUserInfo(userId)
+        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
     BinaryContent profile = null;
     if (binaryContentCreateDto.isPresent()) {
       profile = binaryContentMapper.toEntity(binaryContentCreateDto.get());

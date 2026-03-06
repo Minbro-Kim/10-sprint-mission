@@ -21,4 +21,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   @Query("select u from User u join fetch u.userStatus left join fetch u.profile")
   List<User> findAllFetchUserInfo();
 
+  @Query("select u from User u join fetch u.userStatus left join fetch u.profile where u.id = :id")
+  Optional<User> findByIdFetchUserInfo(UUID id);
+
 }
