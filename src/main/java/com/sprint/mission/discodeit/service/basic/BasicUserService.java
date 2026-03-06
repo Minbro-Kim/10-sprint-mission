@@ -69,7 +69,7 @@ public class BasicUserService implements UserService {
   @Transactional(readOnly = true)
   @Override
   public List<UserDto> findAll() {
-    List<User> users = userRepository.findAll();
+    List<User> users = userRepository.findAllFetchUserInfo();
     List<UserDto> response = new ArrayList<>();
     users.forEach(u -> response.add(userMapper.toDto(u)));
     return response;
