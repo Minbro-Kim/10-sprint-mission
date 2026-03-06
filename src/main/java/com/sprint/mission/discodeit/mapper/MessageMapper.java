@@ -23,21 +23,6 @@ public interface MessageMapper {
 
   @Mapping(source = "channel.id", target = "channelId")
   MessageDto toDto(Message message);
-  /*
-  private final ChannelRepository channelRepository;
-  private final UserRepository userRepository;
-  private final BinaryContentRepository binaryContentRepository;
-
-  public MessageDto toDto(Message message) {
-    return new MessageDto(message.getId(),
-        message.getContent(),
-        message.getChannel().getId(),
-        message.getAuthor().getId(),
-        message.getAttachments().stream().map(BaseEntity::getId).toList(),
-        message.getCreatedAt(),
-        message.getUpdatedAt()
-    );
-  }*/
 
   default Message toEntity(MessageCreateRequest dto, User user, Channel channel,
       List<BinaryContent> attachments) {

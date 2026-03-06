@@ -16,19 +16,6 @@ public interface UserMapper {
   @Mapping(source = "userStatus.online", target = "online")
   UserDto toDto(User user);
 
-  /*
-  public UserDto toDto(User user, UserStatus userStatus) {
-    return new UserDto(
-        user.getId(),
-        user.getUsername(),
-        user.getEmail(),
-        user.getProfile().getId(),
-        userStatus.isOnline(),
-        user.getCreatedAt(),
-        user.getUpdatedAt()
-    );
-  }
-  */
 
   default User toEntity(UserCreateRequest dto, BinaryContent profile) {
     return User.create(
