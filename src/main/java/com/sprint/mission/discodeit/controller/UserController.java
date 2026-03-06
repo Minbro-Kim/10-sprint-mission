@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
+import com.sprint.mission.discodeit.dto.userstatus.UserStatusDto;
 import com.sprint.mission.discodeit.dto.userstatus.UserStatusUpdateDto;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.ErrorResponse;
@@ -214,24 +215,16 @@ public class UserController {
                         "fieldErrors": null,
                         "violationErrors": null,
                         "code": 404,
-                        "message": "존재하지 않는 바이너리 컨텐츠"
+                        "message": "존재하지 않는 사용자 상태 정보"
                       }
                   """)
           )
       )
   })
   @PatchMapping(path = "/{userId}/userStatus")
-  public ResponseEntity<UserStatus> updateUserStatus(@PathVariable UUID userId,
+  public ResponseEntity<UserStatusDto> updateUserStatus(@PathVariable UUID userId,
       @Valid @RequestBody UserStatusUpdateDto dto) {
     return ResponseEntity.status(HttpStatus.OK).body(userStatusService.updateByUserId(userId, dto));
   }
-/*
-    //추가
-   //특정 사용자 조회 - 누구나 조회가능!
-    @RequestMapping(path ="/{userid}" , method= RequestMethod.GET)
-    public ResponseEntity<UserDto> findUser(@PathVariable UUID userid) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.find(userid));
-    }
 
- */
 }

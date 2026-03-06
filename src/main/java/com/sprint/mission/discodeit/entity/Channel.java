@@ -1,44 +1,58 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.NoArgsConstructor;
+
 @Getter
-public class Channel implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
-    private ChannelType type;
-    private String name;
-    private String description;
+@Entity
+@Table(name = "channels")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Channel extends BaseUpdatableEntity {
 
-    public Channel(ChannelType type, String name, String description) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        //
-        this.type = type;
-        this.name = name;
-        this.description = description;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 10)
+  private ChannelType type;
+
+  @Size(max = 100)
+  @Column(length = 100)
+  private String name;
+
+  @Size(max = 500)
+  @Column(length = 500)
+  private String description;
+
+  public static Channel create(ChannelType type, String name, String description) {
+    return new Channel(type, name, description);
+  }
+
+  private Channel(ChannelType type, String name, String description) {
+    if (type == null) {
+      throw new IllegalArgumentException("type is null");
+    }
+    this.type = type;
+    this.name = name;
+    this.description = description;
+  }
+
+  public void update(String newName, String newDescription) {
+    if (newName != null && !newName.isEmpty() && !newName.equals(this.name)) {
+      this.name = newName;
+    }
+    if (newDescription != null && !newDescription.equals(this.description)) {
+      this.description = newDescription;
     }
 
-
-    public void update(String newName, String newDescription) {
-        boolean anyValueUpdated = false;
-        if (newName != null && !newName.isEmpty() && !newName.equals(this.name)) {
-            this.name = newName;
-            anyValueUpdated = true;
-        }
-        if (newDescription != null && !newDescription.equals(this.description)) {
-            this.description = newDescription;
-            anyValueUpdated = true;
-        }
-
-        if (anyValueUpdated) {
-            this.updatedAt = Instant.now();
-        }
-    }
+  }
 }

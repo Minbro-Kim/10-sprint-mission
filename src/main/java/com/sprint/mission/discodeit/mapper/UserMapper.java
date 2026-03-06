@@ -5,29 +5,37 @@ import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import lombok.AllArgsConstructor;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-@Component
-public class UserMapper {
+@Mapper(componentModel = "spring", uses = {BinaryContentMapper.class})
+public interface UserMapper {
 
-    public UserDto toDto(User user, UserStatus userStatus) {
-        return new UserDto(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getProfileId(),
-                userStatus.isOnline(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-    }
+  @Mapping(source = "userStatus.online", target = "online")
+  UserDto toDto(User user);
 
-    public User toEntity(UserCreateRequest dto, BinaryContent profile) {
-        return new User(
-                dto.username(),
-                dto.email(),
-                dto.password(),
-                profile==null?null:profile.getId()
-        );
-    }
+  /*
+  public UserDto toDto(User user, UserStatus userStatus) {
+    return new UserDto(
+        user.getId(),
+        user.getUsername(),
+        user.getEmail(),
+        user.getProfile().getId(),
+        userStatus.isOnline(),
+        user.getCreatedAt(),
+        user.getUpdatedAt()
+    );
+  }
+  */
+
+  default User toEntity(UserCreateRequest dto, BinaryContent profile) {
+    return User.create(
+        dto.username(),
+        dto.email(),
+        dto.password(),
+        profile
+    );
+  }
 }

@@ -1,33 +1,41 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.UUID;
+
+@Entity
 @Getter
-@Setter
-public class BinaryContent implements Serializable {
-    private static final long serialVersionUID = 1L;
-    /* - 이미지, 파일 등 바이너리 데이터를 표현하는 도메인 모델입니다.
-    사용자의 프로필 이미지, 메시지에 첨부된 파일을 저장하기 위해 활용합니다.
-     */
-    private UUID id;
-    private Instant createdAt;
-    //수정 불가
-    private String fileName;
-    private String contentType;
-    private byte[] bytes;
-    private long size;
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "binary_contents")
+public class BinaryContent extends BaseEntity {
 
-    public BinaryContent(String fileName, String contentType,byte[] bytes,long size) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        this.fileName = fileName;
-        this.contentType = contentType;
-        this.bytes = bytes;
-        this.size = size;
-    }
+  @Size(max = 255)
+  @Column(length = 255, nullable = false)
+  private String fileName;
 
+  @Size(max = 100)
+  @Column(length = 100, nullable = false)
+  private String contentType;
+
+  @Column(nullable = false)
+  private long size;
+
+  public static BinaryContent create(String fileName, String contentType, long size) {
+    return new BinaryContent(fileName, contentType, size);
+  }
+
+  private BinaryContent(String fileName, String contentType, long size) {
+    this.fileName = fileName;
+    this.contentType = contentType;
+    this.size = size;
+  }
+  
 }

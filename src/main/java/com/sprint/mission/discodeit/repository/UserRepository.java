@@ -5,15 +5,17 @@ import com.sprint.mission.discodeit.entity.User;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-public interface UserRepository {
-    User save(User user);
-    Optional<User> findById(UUID id);
-    List<User> findAll();
-    boolean existsById(UUID id);
-    void deleteById(UUID id);
-    boolean existsByEmail(String email);
-    boolean existsByUsername(String username);
-    Optional<User> findByUsernameAndPassword(String username, String password);
+public interface UserRepository extends JpaRepository<User, UUID> {
+
+  boolean existsByEmail(String email);
+
+  boolean existsByUsername(String username);
+
+  @Query("select u from User u join fetch u.userStatus join fetch u.profile where u.username = :username and u.password =:password")
+    // 유저상태와 프로필 정보를 유저 디티오에 같이 보내기 때문에 쿼리 3번 발생.패치조인으로 한번에 가져오기
+  Optional<User> findByUsernameAndPassword(String username, String password);
 
 }
