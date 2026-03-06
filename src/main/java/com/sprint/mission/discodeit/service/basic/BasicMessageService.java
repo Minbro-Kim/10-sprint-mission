@@ -80,7 +80,7 @@ public class BasicMessageService implements MessageService {
     //checkMember(channelId, userId);//인증 인가 도입하고 실행
 //    return messageRepository.findAllByChannelId(channelId,pageable).stream()
 //        .map(messageMapper::toDto).toList();
-    Slice<Message> slice = messageRepository.findAllByChannelId(channelId, pageable);
+    Slice<Message> slice = messageRepository.findAllByChannelIdFetchUserInfo(channelId, pageable);
     Slice<MessageDto> sliceDto = slice.map(messageMapper::toDto);
     PageResponse<MessageDto> response = pageResponseMapper.fromSlice(sliceDto);
     return response;

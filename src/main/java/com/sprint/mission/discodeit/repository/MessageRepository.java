@@ -13,7 +13,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface MessageRepository extends JpaRepository<Message, UUID> {
 
-  Slice<Message> findAllByChannelId(UUID channelId, Pageable pageable);
+  @Query("select m from Message m left join fetch m.author left join fetch m.author.profile left join fetch m.author.userStatus where m.channel.id = :channelId")
+  Slice<Message> findAllByChannelIdFetchUserInfo(UUID channelId, Pageable pageable);
 
   @Query(value = "SELECT * FROM messages WHERE channel_id = :channelId ORDER BY created_at DESC LIMIT 1",
       nativeQuery = true)
