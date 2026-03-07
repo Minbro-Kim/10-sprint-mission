@@ -79,7 +79,7 @@ public class User extends BaseUpdatableEntity {
     if (newPassword != null && !newPassword.isEmpty() && !newPassword.equals(this.password)) {
       this.password = newPassword;
     }
-    if (newProfile != null && !newProfile.equals(this.profile)) {
+    if (newProfile != null && !newProfile.getId().equals(this.profile.getId())) {
       this.profile = newProfile;
     }
 

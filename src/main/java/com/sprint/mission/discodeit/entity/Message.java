@@ -52,10 +52,10 @@ public class Message extends BaseUpdatableEntity {
 
   private Message(String content, Channel channel, User author, List<BinaryContent> attachments) {
     if (channel == null || author == null) {
-      throw new IllegalArgumentException("Channel and author are both null");
+      throw new IllegalArgumentException("채널 또는 작성자가 Null임");
     }
     if ((content == null || content.isEmpty()) && (attachments == null || attachments.isEmpty())) {
-      throw new IllegalArgumentException("Both content and attachments are null");
+      throw new IllegalArgumentException("메세지 내용과 첨부파일이 모두 비어있음");
     }
     this.content = content;
     this.channel = channel;
