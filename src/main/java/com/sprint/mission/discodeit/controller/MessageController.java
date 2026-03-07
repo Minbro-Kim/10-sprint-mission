@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.awt.Cursor;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageRequest;
@@ -153,10 +155,14 @@ public class MessageController {
               example = """
                   {
                       "size": 50,
-                      "page": 0,
                       "sort": "createdAt,desc"
                   }
                   """
+          ),
+          @Parameter(
+              name = "cursor",
+              description = "페이징 커서 정보",
+              required = false
           )
       }
   )
@@ -165,13 +171,17 @@ public class MessageController {
   public ResponseEntity<PageResponse<MessageDto>> findMessagesByChannelId(
       //@RequestHeader UUID userId,//나중에 인증/인가로
       @RequestParam("channelId") UUID channelId,
-      Pageable pageable
+      Pageable pageable,
+      @RequestParam(required = false) Instant cursor//널이면 가장 최근꺼 기준
   ) {
+    /* 기존 오프셋 방식
     pageable = PageRequest.of(pageable.getPageNumber() == 0 ? 0 : pageable.getPageNumber() - 1,
         pageable.getPageSize(),
         pageable.getSort());
+
+     */
     return ResponseEntity.status(HttpStatus.OK)
-        .body(messageService.findAllByChannelId(channelId, pageable));
+        .body(messageService.findAllByChannelId(channelId, pageable, cursor));
   }
 
 }
