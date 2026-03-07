@@ -104,7 +104,7 @@ public class ReadStatusController {
   @PatchMapping(path = "/{readStatusId}")
   public ResponseEntity<ReadStatusDto> updateReadStatus(@PathVariable UUID readStatusId,
       @RequestBody ReadStatusUpdateRequest dto) {
-    return ResponseEntity.status(HttpStatus.OK).body(readStatusService.update(readStatusId, dto));
+    return ResponseEntity.ok(readStatusService.update(readStatusId, dto));
   }
 
   @Operation(summary = "User의 Message 읽음 상태 목록 조회",
@@ -117,6 +117,6 @@ public class ReadStatusController {
   @ApiResponse(responseCode = "200", description = "Message 읽음 상태 목록 조회 성공")
   @GetMapping
   public ResponseEntity<List<ReadStatusDto>> findAllByUserId(@RequestParam("userId") UUID userId) {
-    return ResponseEntity.status(HttpStatus.OK).body(readStatusService.findAllByUserId(userId));
+    return ResponseEntity.ok(readStatusService.findAllByUserId(userId));
   }
 }

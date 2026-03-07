@@ -58,7 +58,7 @@ public class BinaryContentController {
   @Parameters(value = {@Parameter(name = "binaryContentId", description = "조회할 첨부 파일 ID")})
   @GetMapping(path = "/{binaryContentId}")
   public ResponseEntity<BinaryContentDto> findProfileImage(@PathVariable UUID binaryContentId) {
-    return ResponseEntity.status(HttpStatus.OK).body(binaryContentService.find(binaryContentId));
+    return ResponseEntity.ok(binaryContentService.find(binaryContentId));
   }
 
   @Operation(summary = "여러 첨부 파일 조회", operationId = "findAllByIdIn",
@@ -67,8 +67,7 @@ public class BinaryContentController {
   @GetMapping
   public ResponseEntity<List<BinaryContentDto>> findImages(
       @RequestParam List<UUID> binaryContentIds) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(binaryContentService.findAllByIdIn(binaryContentIds));
+    return ResponseEntity.ok(binaryContentService.findAllByIdIn(binaryContentIds));
   }
 
   @Operation(summary = "파일 다운로드", operationId = "download")

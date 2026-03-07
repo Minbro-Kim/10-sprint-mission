@@ -159,8 +159,8 @@ public class UserController {
     if (multipartFile != null && !multipartFile.isEmpty()) {
       binaryContentCreateDto = binaryContentMapper.toCreateDto(multipartFile);
     }
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(userService.update(userId, dto, Optional.ofNullable(binaryContentCreateDto)));
+    return ResponseEntity.ok(
+        userService.update(userId, dto, Optional.ofNullable(binaryContentCreateDto)));
   }
 
   @Operation(
@@ -197,7 +197,7 @@ public class UserController {
   @ApiResponse(responseCode = "200", description = "User 목록 조회 성공")
   @GetMapping
   public ResponseEntity<List<UserDto>> findAll() {
-    return ResponseEntity.status(HttpStatus.OK).body(userService.findAll());
+    return ResponseEntity.ok(userService.findAll());
   }
 
   @Operation(summary = "User 온라인 상태 업데이트", operationId = "updateUserStatusByUserId",
@@ -224,7 +224,7 @@ public class UserController {
   @PatchMapping(path = "/{userId}/userStatus")
   public ResponseEntity<UserStatusDto> updateUserStatus(@PathVariable UUID userId,
       @Valid @RequestBody UserStatusUpdateDto dto) {
-    return ResponseEntity.status(HttpStatus.OK).body(userStatusService.updateByUserId(userId, dto));
+    return ResponseEntity.ok(userStatusService.updateByUserId(userId, dto));
   }
 
 }

@@ -111,7 +111,7 @@ public class MessageController {
       //@RequestHeader UUID userId,//인증/인가
       @PathVariable UUID messageId,
       @RequestBody MessageUpdateRequest dto) {
-    return ResponseEntity.status(HttpStatus.OK).body(messageService.update(messageId, dto));
+    return ResponseEntity.ok(messageService.update(messageId, dto));
   }
 
   @Operation(summary = "Message 삭제", operationId = "delete_1",
@@ -180,8 +180,7 @@ public class MessageController {
         pageable.getSort());
 
      */
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(messageService.findAllByChannelId(channelId, pageable, cursor));
+    return ResponseEntity.ok(messageService.findAllByChannelId(channelId, pageable, cursor));
   }
 
 }
