@@ -39,7 +39,7 @@ public class Channel extends BaseUpdatableEntity {
 
   private Channel(ChannelType type, String name, String description) {
     if (type == null) {
-      throw new IllegalArgumentException("type is null");
+      throw new IllegalArgumentException("타입이 Null임");
     }
     this.type = type;
     this.name = name;
