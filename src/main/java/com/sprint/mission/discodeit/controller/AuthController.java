@@ -29,7 +29,7 @@ public class AuthController {
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "로그인 성공"),
       @ApiResponse(
-          responseCode = "400",
+          responseCode = "401",
           description = "일치하지 않는 로그인 정보",
           content = @Content(
               mediaType = "application/json",
@@ -38,7 +38,7 @@ public class AuthController {
                       {
                         "fieldErrors": null,
                         "violationErrors": null,
-                        "code": 400,
+                        "code": 401,
                         "message": "잘못된 아이디 또는 비밀번호"
                       }
                   """)
