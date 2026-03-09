@@ -22,6 +22,9 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
   Slice<Message> findAllByChannelIdFetchUserInfo(UUID channelId, Pageable pageable,
       Instant cursor);//널비교때는 타입 추론 이 안되기 때문에 캐스팅 필요
 
+  @Query("select m from Message m left join fetch m.attachments where m.id in :ids")
+  List<Message> findAllByIdInFetchAttachments(List<UUID> ids);
+
   @Query(value = "SELECT * FROM messages WHERE channel_id = :channelId ORDER BY created_at DESC LIMIT 1",
       nativeQuery = true)
   Optional<Message> findLastMessageByChannelId(@Param("channelId") UUID channelId);

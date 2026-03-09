@@ -24,6 +24,12 @@ public interface MessageMapper {
   @Mapping(source = "channel.id", target = "channelId")
   MessageDto toDto(Message message);
 
+  //목록 조회용 디티오 매퍼
+  @Mapping(source = "message.channel.id", target = "channelId")
+  @Mapping(source = "attachments", target = "attachments")
+//인자로 받은 컨텐츠목록을 디티오 필드로 매핑
+  MessageDto toDto(Message message, List<BinaryContent> attachments);
+
   default Message toEntity(MessageCreateRequest dto, User user, Channel channel,
       List<BinaryContent> attachments) {
     return Message.create(dto.content(), channel, user, attachments);
