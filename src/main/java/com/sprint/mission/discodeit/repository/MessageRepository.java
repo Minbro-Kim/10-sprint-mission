@@ -4,7 +4,9 @@ import com.sprint.mission.discodeit.entity.Message;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -24,5 +26,18 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
       nativeQuery = true)
   Optional<Message> findLastMessageByChannelId(@Param("channelId") UUID channelId);
 
+  @Query(value = "SELECT channel_id, Max(created_at) AS maxCreatedAt FROM messages "
+      + " WHERE messages.channel_id IN :channelIds "
+      + "GROUP BY channel_id",
+      nativeQuery = true)
+  List<LastMessageTime> findAllLastMessagesByChannelId(Set<UUID> channelIds);
+
   void deleteByChannelId(UUID channelId);
+
+  public interface LastMessageTime {
+
+    UUID getChannelId();
+
+    Instant getMaxCreatedAt();
+  }
 }

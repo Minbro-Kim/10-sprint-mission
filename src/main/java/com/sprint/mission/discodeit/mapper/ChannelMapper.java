@@ -6,8 +6,10 @@ import com.sprint.mission.discodeit.dto.channel.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -55,5 +57,18 @@ public abstract class ChannelMapper {
     return Channel.create(ChannelType.PRIVATE, null, null);
   }
 
+  //채널목록 조회시 디티오매퍼
+  public ChannelDto toDto(Channel channel, List<User> users, Instant lastMessageAt) {
+    return new ChannelDto(
+        channel.getId(),
+        channel.getType(),
+        channel.getName(),
+        channel.getDescription(),
+        channel.getCreatedAt(),
+        channel.getUpdatedAt(),
+        lastMessageAt, //아직 채널에 메세지가 없는 경우 null
+        users.stream().map(userMapper::toDto).toList()
+    );
+  }
 
 }

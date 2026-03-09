@@ -81,11 +81,35 @@ public class BasicChannelService implements ChannelService {
         /*
             사용자가 속한 채널 = 비공개+공개
          */
-    readStatusRepository.findAllByUserId(userId)
+    //기존로직 - n+1 발생
+//    readStatusRepository.findAllByUserId(userId)
+//        .forEach(r -> {
+//          response.add(channelMapper.toDto(r.getChannel()));
+//        });
+    //변경로직
+    Map<UUID, List<User>> userMap = new HashMap<>();
+    Map<UUID, Channel> myChannels = new HashMap<>();
+    readStatusRepository.findAllByUserIdFetchChannel(userId)
         .forEach(r -> {
-          response.add(channelMapper.toDto(r.getChannel()));
+          userMap.putIfAbsent(r.getChannel().getId(), new ArrayList<>());
+          myChannels.put(r.getChannel().getId(), r.getChannel());
         });
-    //readStatusRepository.findAllByUserIdOrderByCreatedAtAsc(userId);
+    readStatusRepository.findAllByChannelIdInFetchUser(userMap.keySet())
+        .forEach(r -> {
+          userMap.get(r.getChannel().getId()).add(r.getUser());
+        });
+
+    Map<UUID, Instant> lastMessages = new HashMap<>();
+    messageRepository.findAllLastMessagesByChannelId(userMap.keySet())
+        .forEach(m -> {
+          lastMessages.put(m.getChannelId(), m.getMaxCreatedAt());
+        });
+
+    myChannels.values().forEach(c -> {
+      response.add(channelMapper.toDto(c, userMap.get(c.getId()),
+          lastMessages.getOrDefault(c.getId(), null)));
+    });
+
     return response.stream()
         .sorted(Comparator.comparing(ChannelDto::createdAt))
         .toList();//채널 순서 보장
