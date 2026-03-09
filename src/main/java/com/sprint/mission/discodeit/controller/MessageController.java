@@ -17,12 +17,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.awt.Cursor;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -171,7 +170,7 @@ public class MessageController {
   public ResponseEntity<PageResponse<MessageDto>> findMessagesByChannelId(
       //@RequestHeader UUID userId,//나중에 인증/인가로
       @RequestParam("channelId") UUID channelId,
-      Pageable pageable,
+      @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
       @RequestParam(required = false) Instant cursor//널이면 가장 최근꺼 기준
   ) {
     /* 기존 오프셋 방식
