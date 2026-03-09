@@ -39,15 +39,11 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public ChannelDto create(PublicChannelCreateRequest dto) {
-    //System.out.println("채널 생성 시작!!!");
     Channel channel = channelMapper.toEntity(dto);
-    //System.out.println("엔티티 변환 끝");
     channelRepository.save(channel);
-    //System.out.println("채널 저장 완료");
     //모든 사용자가 멤버!
     userRepository.findAll()//한번에 저장하는방법?
         .forEach(m -> readStatusRepository.save(ReadStatus.create(m, channel, Instant.EPOCH)));
-    //System.out.println("읽음 상태 저장 완료");
     System.out.println("채널 생성 읽음 상태 초기값: " + Instant.EPOCH);
     return channelMapper.toDto(channel);
   }
