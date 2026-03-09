@@ -57,7 +57,7 @@ public class ReadStatusController {
           )
       ),
       @ApiResponse(
-          responseCode = "409",
+          responseCode = "400",
           description = "이미 읽음 상태가 존재함",
           content = @Content(
               mediaType = "application/json",
@@ -66,7 +66,7 @@ public class ReadStatusController {
                       {
                         "fieldErrors": null,
                         "violationErrors": null,
-                        "code": 409,
+                        "code": 400,
                         "message": "이미 존재하는 읽기 상태(멤버)"
                       }
                   """)

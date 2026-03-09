@@ -76,7 +76,7 @@ public class ChannelController {
           )
       ),
       @ApiResponse(
-          responseCode = "403",
+          responseCode = "400",
           description = "Private Channel은 수정할 수 없음",
           content = @Content(
               mediaType = "application/json",
@@ -85,7 +85,7 @@ public class ChannelController {
                       {
                         "fieldErrors": null,
                         "violationErrors": null,
-                        "code": 403,
+                        "code": 400,
                         "message": "비공개 채널에 허용되지 않은 기능"
                       }
                   """)

@@ -53,7 +53,7 @@ public class UserController {
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "User가 성공적으로 생성됨"),
       @ApiResponse(
-          responseCode = "409",
+          responseCode = "400",
           description = "같은 email 또는 username를 사용하는 User가 이미 존재함",
           content = @Content(
               mediaType = "application/json",
@@ -62,7 +62,7 @@ public class UserController {
                       {
                         "fieldErrors": null,
                         "violationErrors": null,
-                        "code": 409,
+                        "code": 400,
                         "message": "이미 존재하는 사용자이름"
                       }
                   """)
@@ -125,7 +125,7 @@ public class UserController {
                       {
                         "fieldErrors": null,
                         "violationErrors": null,
-                        "code": 409,
+                        "code": 404,
                         "message": "존재하지 않는 사용자"
                       }
                   """)
