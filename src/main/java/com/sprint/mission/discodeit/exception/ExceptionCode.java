@@ -1,8 +1,10 @@
 package com.sprint.mission.discodeit.exception;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public enum ExceptionCode {
   //AUTH
   INVALID_CREDENTIALS(401, "INVALID_CREDENTIALS", "잘못된 아이디 또는 비밀번호"),
@@ -30,11 +32,5 @@ public enum ExceptionCode {
   private final int code;
   private final String status;
   private final String message;
-
-  ExceptionCode(int code, String status, String message) {
-    this.status = status;
-    this.code = code;
-    this.message = message;
-  }
 
 }
