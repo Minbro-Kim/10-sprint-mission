@@ -16,7 +16,7 @@ spring:
     open-in-view: false
   sql:
     init:
-      mode: never
+      mode: always
     #use_sql_comments: true
   logging:
     level:
