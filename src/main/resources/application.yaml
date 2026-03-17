@@ -1,9 +1,31 @@
 spring:
   application:
     name: discodeit
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER_NAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none # DDL설정 개발 단계는 update, 운영은 none 권장create는 매번 드랍하고 생성, update는 수정사항만, none은 안건드린다.
+    show-sql: true      # 실행 쿼리 확인
+    properties:
+      hibernate:
+        format_sql: true # SQL 포맷팅 가독성
+    open-in-view: false
+  sql:
+    init:
+      mode: always
+    #use_sql_comments: true
+  logging:
+    level:
+      org.hibernate.SQL: debug
+      org.hibernate.jdbc.bind: trace
 # repo 구현체 선택
 discodeit:
-  repository:
-    type: file # jcf | file
-    file-directory: .discodeit # 파일레포 저장 위치
+  storage: # storage 저장 방식
+    type: local # file
+    local:
+      root-path: .discodeit # 파일레포 저장 위치
 

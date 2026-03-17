@@ -1,47 +1,65 @@
 package com.sprint.mission.discodeit.entity;
 
-import lombok.Getter;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import com.sprint.mission.discodeit.exception.BusinessLogicException;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class UserStatus implements Serializable {
-    private static final long serialVersionUID = 1L;
-    /* 사용자 별 마지막으로 확인된 접속 시간을 표현하는 도메인 모델입니다.
-    사용자의 온라인 상태를 확인하기 위해 활용합니다.
-     */
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
-    private UUID userId;
-    private Instant lastActiveAt;
-    private boolean online;
+@Table(name = "user_statuses")
+public class UserStatus extends BaseUpdatableEntity {
 
-    public UserStatus(UUID userId){
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        this.lastActiveAt = this.createdAt;
-        this.userId = userId;
-        this.online = isOnline();
-    }
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-    public boolean isOnline(){
-        Instant now = Instant.now();
-        if(lastActiveAt==null){
-            if(updatedAt==null){
-                lastActiveAt = createdAt;
-            }else {
-                lastActiveAt = updatedAt;
-            }
-        }
-        Instant limitTime = lastActiveAt.plusSeconds(300);
-        return now.isBefore(limitTime);
+  @Column(nullable = false)
+  private Instant lastActiveAt;
+
+  public static UserStatus create(User user, Instant lastActiveAt) {
+    return new UserStatus(user, lastActiveAt);
+  }
+
+  private UserStatus(User user, Instant lastActiveAt) {
+    if (user == null || lastActiveAt == null) {
+      throw new IllegalArgumentException("사용자 또는 마지막 활동 시간이 NULL임");
     }
-    public void update(Instant lastActiveAt){
-        this.lastActiveAt = lastActiveAt;
-        this.updatedAt = Instant.now();
-        this.online = isOnline();
+    this.lastActiveAt = lastActiveAt;
+    setUser(user);
+  }
+
+  public void setUser(User user) {
+    this.user = user;
+    if (user.getUserStatus() == null || user.getUserStatus() != this) {
+      user.setUserStatus(this);
     }
+  }
+
+  public boolean isOnline() {
+    Instant now = Instant.now();
+    Instant limitTime = lastActiveAt.plusSeconds(300);
+    return now.isBefore(limitTime);
+  }
+
+  public void update(Instant lastActiveAt) {
+    if (lastActiveAt == null) {
+      throw new IllegalArgumentException("마지막 활동 시간이 NULL임");
+    }
+    this.lastActiveAt = lastActiveAt;
+  }
 }

@@ -1,48 +1,78 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.util.ArrayList;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.NoArgsConstructor;
+
 @Getter
-public class Message implements Serializable {
-    private static final long serialVersionUID = 1L;
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "messages")
+public class Message extends BaseUpdatableEntity {
 
-    private UUID id;
-    private Instant createdAt;
-    private Instant updatedAt;
-    //
-    private String content;
-    //
-    private UUID channelId;
-    private UUID authorId;
-    //
-    private List<UUID> attachmentIds;
+  @Column
+  private String content;
 
-    public Message(String content, UUID channelId, UUID authorId, List<UUID> attachmentIds) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        //
-        this.content = content;
-        this.channelId = channelId;
-        this.authorId = authorId;
-        this.attachmentIds = attachmentIds;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id", nullable = false)
+  private Channel channel;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "author_id")
+  private User author;
+
+  @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
+  @JoinTable(
+      name = "message_attachments",
+      joinColumns = @JoinColumn(name = "message_id"),
+      inverseJoinColumns = @JoinColumn(name = "attachment_id")
+  )
+  private List<BinaryContent> attachments = new ArrayList<>();
+
+  public static Message create(String content, Channel channel, User author,
+      List<BinaryContent> attachments) {
+    return new Message(content, channel, author, attachments);
+  }
+
+  private Message(String content, Channel channel, User author, List<BinaryContent> attachments) {
+    if (channel == null || author == null) {
+      throw new IllegalArgumentException("채널 또는 작성자가 Null임");
+    }
+    if ((content == null || content.isEmpty()) && (attachments == null || attachments.isEmpty())) {
+      throw new IllegalArgumentException("메세지 내용과 첨부파일이 모두 비어있음");
+    }
+    this.content = content;
+    this.channel = channel;
+    this.author = author;
+    if (attachments != null && !attachments.isEmpty()) {
+      this.attachments.addAll(attachments);
+    }
+  }
+
+  public void update(String newContent, List<BinaryContent> newAttachments) {
+
+    if (newContent != null && !newContent.equals(this.content)) {
+      this.content = newContent;
+    }
+    if (newAttachments != null) {
+      this.attachments = newAttachments;
     }
 
-    public void update(String newContent, List<UUID> newAttachmentIds) {
-        boolean anyValueUpdated = false;
-        if (newContent != null && !newContent.equals(this.content)) {
-            this.content = newContent;
-            anyValueUpdated = true;
-        }
-        if (newAttachmentIds != null) {
-            this.attachmentIds = newAttachmentIds;
-            anyValueUpdated = true;
-        }
-        if (anyValueUpdated) {
-            this.updatedAt = Instant.now();
-        }
-    }
+  }
 }
