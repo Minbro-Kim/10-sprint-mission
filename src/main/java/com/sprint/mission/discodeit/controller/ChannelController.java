@@ -94,7 +94,7 @@ public class ChannelController {
   })
   @PatchMapping("/{channelId}")//나중에 소유자가 정해진다면, 권한확인필요
   public ResponseEntity<ChannelDto> updatePublicChannel(@PathVariable UUID channelId,
-      @RequestBody PublicChannelUpdateRequest dto) {
+      @Valid @RequestBody PublicChannelUpdateRequest dto) {
     return ResponseEntity.ok(channelService.update(channelId, dto));
   }
 

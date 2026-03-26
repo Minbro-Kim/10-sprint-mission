@@ -109,7 +109,7 @@ public class MessageController {
   public ResponseEntity<MessageDto> updateMessage(
       //@RequestHeader UUID userId,//인증/인가
       @PathVariable UUID messageId,
-      @RequestBody MessageUpdateRequest dto) {
+      @Valid @RequestBody MessageUpdateRequest dto) {
     return ResponseEntity.ok(messageService.update(messageId, dto));
   }
 

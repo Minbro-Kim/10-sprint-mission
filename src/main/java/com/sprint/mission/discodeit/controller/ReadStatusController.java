@@ -103,7 +103,7 @@ public class ReadStatusController {
   })
   @PatchMapping(path = "/{readStatusId}")
   public ResponseEntity<ReadStatusDto> updateReadStatus(@PathVariable UUID readStatusId,
-      @RequestBody ReadStatusUpdateRequest dto) {
+      @Valid @RequestBody ReadStatusUpdateRequest dto) {
     return ResponseEntity.ok(readStatusService.update(readStatusId, dto));
   }
 
