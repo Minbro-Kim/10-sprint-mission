@@ -20,12 +20,14 @@ import com.sprint.mission.discodeit.service.ChannelService;
 
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.comparator.Comparators;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -39,27 +41,31 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public ChannelDto create(PublicChannelCreateRequest dto) {
+    log.debug("공개 채널 생성 시도: channelName={}", dto.name());
     Channel channel = channelMapper.toEntity(dto);
     channelRepository.save(channel);
     //모든 사용자가 멤버!
     userRepository.findAll()//한번에 저장하는방법?
         .forEach(m -> readStatusRepository.save(ReadStatus.create(m, channel, Instant.EPOCH)));
-    System.out.println("채널 생성 읽음 상태 초기값: " + Instant.EPOCH);
+    log.info("공개 채널 생성 성공: channelId={}", channel.getId());
     return channelMapper.toDto(channel);
   }
 
   @Override
   public ChannelDto create(PrivateChannelCreateRequest dto) {
+    log.debug("비공개 채널 생성 시도: channelMembers={}", dto.memberIds());
     Channel channel = channelMapper.toEntity(dto);
     channelRepository.save(channel);
     List<User> members = userRepository.findAllById(dto.memberIds());//쿼리 한번으로 조회
-    if (members.size() != dto.memberIds().size()) {
+    if (members.size() != dto.memberIds().size()) {//멤버가 전부 유저가 아닐때만
+      log.warn("존재하지 않는 사용자ID에 대한 비공개 채널 생성 시도");
       throw new BusinessLogicException(ExceptionCode.USER_NOT_FOUND);
     }
     members
         .forEach(m -> {
           readStatusRepository.save(ReadStatus.create(m, channel, Instant.EPOCH));
         });
+    log.info("비공개 채널 생성 성공: channelId={}", channel.getId());
     return channelMapper.toDto(channel);
   }
 
@@ -113,22 +119,28 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public ChannelDto update(UUID id, PublicChannelUpdateRequest dto) {
+    log.debug("채널 수정 시도: channelId={}", id);
     Channel channel = get(id);
     if (channel.getType() == ChannelType.PRIVATE) {
+      log.warn("비공개 채널 수정 시도: channelId={}", channel.getId());
       throw new BusinessLogicException(ExceptionCode.NOT_ALLOWED_IN_PRIVATE_CHANNEL);
     }
     channel.update(dto.name(), dto.description());
+    log.info("공개 채널 수정 성공: channelId={}", channel.getId());
     return channelMapper.toDto(channel);
   }
 
   @Override
   public void delete(UUID channelId) {
+    log.debug("채널 삭제 시도: channelId={}", channelId);
     if (!channelRepository.existsById(channelId)) {
+      log.warn("존재하지 않는 채널 삭제 시도: channelId={}", channelId);
       throw new BusinessLogicException(ExceptionCode.CHANNEL_NOT_FOUND);
     }
     messageRepository.deleteByChannelId(channelId);//메세지 먼저 삭제해야 바이너리 전부 삭제됨.배치 삭제 필요
     channelRepository.deleteById(channelId);
     //readStatusRepository.deleteByChannelId(channelId);데베 설정으로 자동 삭제
+    log.info("채널 삭제 성공: channelId={}", channelId);
   }
 
 

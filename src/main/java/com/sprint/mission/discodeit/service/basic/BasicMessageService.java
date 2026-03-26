@@ -21,6 +21,7 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -48,6 +50,7 @@ public class BasicMessageService implements MessageService {
   @Override
   public MessageDto create(MessageCreateRequest dto,
       List<BinaryContentCreateDto> binaryContentCreateDtos) {
+    log.debug("메세지 생성 시도: channelId={}, authorId={}", dto.channelId(), dto.authorId());
     User user = userRepository.findById(dto.authorId())
         .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
     Channel channel = channelRepository.findById(dto.channelId())
@@ -64,7 +67,11 @@ public class BasicMessageService implements MessageService {
     messageRepository.save(message);
     for (int i = 0; i < binaryContentCreateDtos.size(); i++) {
       binaryContentStorage.put(attachments.get(i).getId(), binaryContentCreateDtos.get(i).bytes());
+      log.debug("메세지 첨부파일 저장: messageId={}, binaryContentId={}", message.getId(),
+          attachments.get(i).getId());
     }
+    log.info("메세지 생성 성공: channelId={}, authorId={}, messageId={}", channel.getId(), user.getId(),
+        message.getId());
     return messageMapper.toDto(message);
   }
 
@@ -105,16 +112,19 @@ public class BasicMessageService implements MessageService {
 
   @Override
   public MessageDto update(UUID id, MessageUpdateRequest dto) {
+    log.debug("메세지 수정 시도: messageId={}", id);
     Message message = get(id);
     //인증인가 구현후 아래 유효성 검증 도입
     //checkMember(message.getChannelId(), userId);
     //checkAuthor(message.getAuthorId(), userId);
     message.update(dto.newContent(), null);//첨부파일 변경을 하려면 별도로 메서드 필요
+    log.info("메세지 수정 성공:  messageId={}", message.getId());
     return messageMapper.toDto(message);
   }
 
   @Override
   public void delete(UUID messageId) {
+    log.debug("메세지 삭제 시도: messageId={}", messageId);
     Message message = get(messageId);
     // 아래 유효성 검증은 인증/인가 추가후
     //checkMember(message.getChannelId(), userId);
@@ -123,6 +133,7 @@ public class BasicMessageService implements MessageService {
 //      message.getAttachments()
 //          .forEach(b -> binaryContentRepository.deleteById(b.getId()));//첨부파일 있는경우만 지우기
 //    }
+    log.info("메세지 삭제 성공: messageId={}", message.getId());
     messageRepository.deleteById(messageId);
 
   }
@@ -131,12 +142,14 @@ public class BasicMessageService implements MessageService {
       List<BinaryContentCreateDto> binaryContentCreateDtos) {
     if ((dto.content() == null || dto.content().isEmpty()) //컨텐츠와 첨부파일 두개다 없는 경우
         && (binaryContentCreateDtos == null || binaryContentCreateDtos.isEmpty())) {
+      log.warn("메세지에 컨텐츠와 첨부파일 둘다 없음");
       throw new BusinessLogicException(ExceptionCode.INVALID_MESSAGE);
     }
   }
 
   private void checkMember(UUID channelId, UUID userId) {
     if (readStatusRepository.findByUserIdAndChannelId(userId, channelId).isEmpty()) {
+      log.warn("해당 채널의 멤버가 아님: channelId={}, userId={}", channelId, userId);
       throw new BusinessLogicException(ExceptionCode.READ_STATUS_NOT_FOUND);
     }
   }
