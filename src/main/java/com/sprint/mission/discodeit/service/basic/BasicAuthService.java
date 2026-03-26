@@ -3,9 +3,8 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.user.LoginRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ExceptionCode;
+import com.sprint.mission.discodeit.exception.DiscodeitException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
@@ -29,9 +28,9 @@ public class BasicAuthService implements AuthService {
   @Override
   public UserDto login(LoginRequest dto) {
     User user = userRepository.findByUsernameAndPassword(dto.username(), dto.password())
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.INVALID_CREDENTIALS));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.INVALID_CREDENTIALS));
     if (user.getUserStatus() == null) {
-      throw new BusinessLogicException(ExceptionCode.USER_STATUS_NOT_FOUND);
+      throw new DiscodeitException(ErrorCode.USER_STATUS_NOT_FOUND);
     }
     user.getUserStatus().update(Instant.now());//
     return userMapper.toDto(user);

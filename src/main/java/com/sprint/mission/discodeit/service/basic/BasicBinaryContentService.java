@@ -3,8 +3,8 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ExceptionCode;
+import com.sprint.mission.discodeit.exception.DiscodeitException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
@@ -38,7 +38,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Transactional(readOnly = true)
   public BinaryContentDto find(UUID id) {
     BinaryContent content = binaryContentRepository.findById(id)
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.BINARY_CONTENT_NOT_FOUND));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.BINARY_CONTENT_NOT_FOUND));
     return binaryContentMapper.toDto(content);
   }
 
@@ -48,7 +48,7 @@ public class BasicBinaryContentService implements BinaryContentService {
     List<BinaryContentDto> response = binaryContentRepository.findAllById(ids)
         .stream().map(binaryContentMapper::toDto).toList();
     if (response.isEmpty()) {//전부다 유효하지 않은경우만 예외 발생
-      throw new BusinessLogicException(ExceptionCode.BINARY_CONTENT_NOT_FOUND);
+      throw new DiscodeitException(ErrorCode.BINARY_CONTENT_NOT_FOUND);
     }
     return response;//요청한 아이디중 유효하지 않은 게 있어도 유효한 아이디가 1개 이상이면 정상 반환
   }
@@ -56,7 +56,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Override
   public void delete(UUID id) {
     if (!binaryContentRepository.existsById(id)) {
-      throw new BusinessLogicException(ExceptionCode.BINARY_CONTENT_NOT_FOUND);
+      throw new DiscodeitException(ErrorCode.BINARY_CONTENT_NOT_FOUND);
     }
     binaryContentRepository.deleteById(id);
   }

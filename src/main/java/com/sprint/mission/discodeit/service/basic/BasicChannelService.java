@@ -6,11 +6,10 @@ import com.sprint.mission.discodeit.dto.channel.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.channel.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
-import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ExceptionCode;
+import com.sprint.mission.discodeit.exception.DiscodeitException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.comparator.Comparators;
 
 @Slf4j
 @Service
@@ -59,7 +57,7 @@ public class BasicChannelService implements ChannelService {
     List<User> members = userRepository.findAllById(dto.memberIds());//쿼리 한번으로 조회
     if (members.size() != dto.memberIds().size()) {//멤버가 전부 유저가 아닐때만
       log.warn("존재하지 않는 사용자ID에 대한 비공개 채널 생성 시도");
-      throw new BusinessLogicException(ExceptionCode.USER_NOT_FOUND);
+      throw new DiscodeitException(ErrorCode.USER_NOT_FOUND);
     }
     members
         .forEach(m -> {
@@ -123,7 +121,7 @@ public class BasicChannelService implements ChannelService {
     Channel channel = get(id);
     if (channel.getType() == ChannelType.PRIVATE) {
       log.warn("비공개 채널 수정 시도: channelId={}", channel.getId());
-      throw new BusinessLogicException(ExceptionCode.NOT_ALLOWED_IN_PRIVATE_CHANNEL);
+      throw new DiscodeitException(ErrorCode.NOT_ALLOWED_IN_PRIVATE_CHANNEL);
     }
     channel.update(dto.name(), dto.description());
     log.info("공개 채널 수정 성공: channelId={}", channel.getId());
@@ -135,7 +133,7 @@ public class BasicChannelService implements ChannelService {
     log.debug("채널 삭제 시도: channelId={}", channelId);
     if (!channelRepository.existsById(channelId)) {
       log.warn("존재하지 않는 채널 삭제 시도: channelId={}", channelId);
-      throw new BusinessLogicException(ExceptionCode.CHANNEL_NOT_FOUND);
+      throw new DiscodeitException(ErrorCode.CHANNEL_NOT_FOUND);
     }
     messageRepository.deleteByChannelId(channelId);//메세지 먼저 삭제해야 바이너리 전부 삭제됨.배치 삭제 필요
     channelRepository.deleteById(channelId);
@@ -146,6 +144,6 @@ public class BasicChannelService implements ChannelService {
 
   private Channel get(UUID channelId) {
     return channelRepository.findById(channelId)
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.CHANNEL_NOT_FOUND));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.CHANNEL_NOT_FOUND));
   }
 }

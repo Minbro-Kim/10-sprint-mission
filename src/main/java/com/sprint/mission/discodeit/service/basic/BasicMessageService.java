@@ -9,8 +9,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ExceptionCode;
+import com.sprint.mission.discodeit.exception.DiscodeitException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
@@ -19,7 +19,6 @@ import com.sprint.mission.discodeit.service.MessageService;
 
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -52,9 +51,9 @@ public class BasicMessageService implements MessageService {
       List<BinaryContentCreateDto> binaryContentCreateDtos) {
     log.debug("메세지 생성 시도: channelId={}, authorId={}", dto.channelId(), dto.authorId());
     User user = userRepository.findById(dto.authorId())
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.USER_NOT_FOUND));
     Channel channel = channelRepository.findById(dto.channelId())
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.CHANNEL_NOT_FOUND));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.CHANNEL_NOT_FOUND));
     checkMember(dto.channelId(), dto.authorId());
     checkValidate(dto, binaryContentCreateDtos);
     List<BinaryContent> attachments = new ArrayList<>();
@@ -143,25 +142,25 @@ public class BasicMessageService implements MessageService {
     if ((dto.content() == null || dto.content().isEmpty()) //컨텐츠와 첨부파일 두개다 없는 경우
         && (binaryContentCreateDtos == null || binaryContentCreateDtos.isEmpty())) {
       log.warn("메세지에 컨텐츠와 첨부파일 둘다 없음");
-      throw new BusinessLogicException(ExceptionCode.INVALID_MESSAGE);
+      throw new DiscodeitException(ErrorCode.INVALID_MESSAGE);
     }
   }
 
   private void checkMember(UUID channelId, UUID userId) {
     if (readStatusRepository.findByUserIdAndChannelId(userId, channelId).isEmpty()) {
       log.warn("해당 채널의 멤버가 아님: channelId={}, userId={}", channelId, userId);
-      throw new BusinessLogicException(ExceptionCode.READ_STATUS_NOT_FOUND);
+      throw new DiscodeitException(ErrorCode.READ_STATUS_NOT_FOUND);
     }
   }
 
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.MESSAGE_NOT_FOUND));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.MESSAGE_NOT_FOUND));
   }
 
   private void checkAuthor(UUID authorId, UUID userId) {
     if (!authorId.equals(userId)) {
-      throw new BusinessLogicException(ExceptionCode.MESSAGE_AUTHOR_ONLY);
+      throw new DiscodeitException(ErrorCode.MESSAGE_AUTHOR_ONLY);
     }
   }
 }

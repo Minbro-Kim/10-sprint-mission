@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum ExceptionCode {
+public enum ErrorCode {
   //AUTH
   INVALID_CREDENTIALS(401, "INVALID_CREDENTIALS", "잘못된 아이디 또는 비밀번호"),
   //USER

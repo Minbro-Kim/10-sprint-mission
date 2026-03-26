@@ -8,8 +8,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ExceptionCode;
+import com.sprint.mission.discodeit.exception.DiscodeitException;
+import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
@@ -93,7 +93,7 @@ public class BasicUserService implements UserService {
     User user = userRepository.findByIdFetchUserInfo(userId)
         .orElseThrow(() -> {
           log.warn("사용자 수정 실패: 존재하지 않는 ID = {}", userId);
-          return new BusinessLogicException(ExceptionCode.USER_NOT_FOUND);
+          return new DiscodeitException(ErrorCode.USER_NOT_FOUND);
         });
     BinaryContent profile = null;
     if (binaryContentCreateDto.isPresent()) {
@@ -126,23 +126,23 @@ public class BasicUserService implements UserService {
 
   private void validateEmail(String email) {
     if (userRepository.existsByEmail(email)) {
-      throw new BusinessLogicException(ExceptionCode.EMAIL_ALREADY_EXIST);
+      throw new DiscodeitException(ErrorCode.EMAIL_ALREADY_EXIST);
     }
   }
 
   private void validateUsername(String username) {
     if (userRepository.existsByUsername(username)) {
-      throw new BusinessLogicException(ExceptionCode.USER_NAME_ALREADY_EXIST);
+      throw new DiscodeitException(ErrorCode.USER_NAME_ALREADY_EXIST);
     }
   }
 
   private UserStatus findUserStatusByUserId(UUID userId) {
     return userStatusRepository.findByUserId(userId)
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_STATUS_NOT_FOUND));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.USER_STATUS_NOT_FOUND));
   }
 
   private User get(UUID userId) {
     return userRepository.findById(userId)
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new DiscodeitException(ErrorCode.USER_NOT_FOUND));
   }
 }
