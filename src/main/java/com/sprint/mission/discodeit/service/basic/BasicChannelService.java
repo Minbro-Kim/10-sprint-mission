@@ -104,7 +104,7 @@ public class BasicChannelService implements ChannelService {
     Map<UUID, Instant> lastMessages = new HashMap<>();
     messageRepository.findAllLastMessagesByChannelId(userMap.keySet())
         .forEach(m -> {
-          lastMessages.put(m.getChannelId(), m.getMaxCreatedAt());
+          lastMessages.put(m.channelId(), m.maxCreatedAt());
         });
 
     myChannels.values().forEach(c -> {

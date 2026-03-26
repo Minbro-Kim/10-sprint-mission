@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.repository;
 
+import com.sprint.mission.discodeit.dto.message.LastMessageTimeDto;
 import com.sprint.mission.discodeit.entity.Message;
 
 import java.time.Instant;
@@ -8,6 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,18 +34,17 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
 
   //채널아이디목록에 대한 모든 마지막 메세지를 조회 -> 인터페이스를 정의해서 반환 자동 매핑
   //별칭 지정 안하면 인터페이스 함수랑 get 뒤에 이름이 같아야함
-  @Query(value = "SELECT channel_id, Max(created_at) AS maxCreatedAt FROM messages "
-      + "WHERE messages.channel_id IN :channelIds "
-      + "GROUP BY channel_id",
-      nativeQuery = true)
-  List<LastMessageTime> findAllLastMessagesByChannelId(Set<UUID> channelIds);
+//  @Query(value = "SELECT channel_id, Max(created_at) AS maxCreatedAt FROM messages "
+//      + "WHERE messages.channel_id IN :channelIds "
+//      + "GROUP BY channel_id",
+//      nativeQuery = true) --h2에서 uuid를 byte로 저장하는 문제 발생 -> 인터페이스 프로젝션에서 dto 프로젝션으로 수정
+  @Query(
+      "SELECT new com.sprint.mission.discodeit.dto.message.LastMessageTimeDto(m.channel.id, MAX(m.createdAt)) "
+          + "FROM Message m "
+          + "WHERE m.channel.id IN :channelIds "
+          + "GROUP BY m.channel.id")
+  List<LastMessageTimeDto> findAllLastMessagesByChannelId(Set<UUID> channelIds);
 
   void deleteByChannelId(UUID channelId);
 
-  interface LastMessageTime {
-
-    UUID getChannelId();
-
-    Instant getMaxCreatedAt();
-  }
 }
