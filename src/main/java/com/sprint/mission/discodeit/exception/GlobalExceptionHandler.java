@@ -13,28 +13,27 @@ public class GlobalExceptionHandler {
   // 기본 에러
   @ExceptionHandler(value = Exception.class)
   public ResponseEntity<ErrorResponse> handleException(Exception e) {
-    ErrorResponse response = ErrorResponse.of(500, e.getMessage());
+    ErrorResponse response = ErrorResponse.of(e);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
   }
 
   @ExceptionHandler(value = DiscodeitException.class)
   public ResponseEntity<ErrorResponse> handleBusinessException(DiscodeitException e) {
-    ErrorResponse response = ErrorResponse.of(e.getExceptionCode().getCode(), e.getMessage());
-    return ResponseEntity.status(HttpStatus.valueOf(e.getExceptionCode().getCode())).body(response);
+    ErrorResponse response = ErrorResponse.of(e);
+    return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getStatus())).body(response);
   }
 
   //파라미터
   @ExceptionHandler(value = MethodArgumentNotValidException.class)
-  //@ResponseStatus(HttpStatus.BAD_REQUEST)
   public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException e) {
-    return ResponseEntity.badRequest().body(ErrorResponse.of(e.getBindingResult()));
+    return ResponseEntity.badRequest().body(ErrorResponse.of(e));
   }
 
   //경로
   @ExceptionHandler(value = ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleConstraintViolationException(
       ConstraintViolationException e) {
-    return ResponseEntity.badRequest().body(ErrorResponse.of(e.getConstraintViolations()));
+    return ResponseEntity.badRequest().body(ErrorResponse.of(e));
   }
 }
