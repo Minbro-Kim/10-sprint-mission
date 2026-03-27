@@ -99,10 +99,10 @@ public class BasicUserService implements UserService {
     log.debug("사용자 수정 시도: userId={}", userId);
     User user = userRepository.findByIdFetchUserInfo(userId)
         .orElseThrow(() -> new UserNotFoundException().addDetail("userId", userId));
-    if (dto.email() != null) {
+    if (dto.email() != null && !user.getEmail().equals(dto.email())) { //변경하는 경우만 검증
       validateEmail(dto.email());
     }
-    if (dto.username() != null) {
+    if (dto.username() != null && !user.getUsername().equals(dto.username())) {
       validateUsername(dto.username());
     }
     BinaryContent profile = null;
