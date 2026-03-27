@@ -43,7 +43,6 @@ public class BasicMessageService implements MessageService {
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
   //
-  private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentMapper binaryContentMapper;
   private final MessageMapper messageMapper;
   private final ReadStatusRepository readStatusRepository;
@@ -54,12 +53,15 @@ public class BasicMessageService implements MessageService {
   public MessageDto create(MessageCreateRequest dto,
       List<BinaryContentCreateDto> binaryContentCreateDtos) {
     log.debug("메세지 생성 시도: channelId={}, authorId={}", dto.channelId(), dto.authorId());
+    log.debug("메세지 생성 중: 작성자 조회, authorId={}", dto.authorId());
     User user = userRepository.findById(dto.authorId())
         .orElseThrow(() -> new UserNotFoundException().addDetail("userId", dto.authorId()));
+    log.debug("메세지 생성 중: 채널 조회, channelId={}", dto.channelId());
     Channel channel = channelRepository.findById(dto.channelId())
         .orElseThrow(() -> new ChannelNotFoundException().addDetail("channelId", dto.channelId()));
     checkMember(dto.channelId(), dto.authorId());
     checkValidate(dto, binaryContentCreateDtos);
+    log.debug("메세지 생성 중: 첨부파일 생성");
     List<BinaryContent> attachments = new ArrayList<>();
     binaryContentCreateDtos
         .forEach((attachment) -> {
@@ -136,13 +138,13 @@ public class BasicMessageService implements MessageService {
 //      message.getAttachments()
 //          .forEach(b -> binaryContentRepository.deleteById(b.getId()));//첨부파일 있는경우만 지우기
 //    }
-    log.info("메세지 삭제 성공: messageId={}", message.getId());
     messageRepository.deleteById(messageId);
-
+    log.info("메세지 삭제 성공: messageId={}", message.getId());
   }
 
   private void checkValidate(MessageCreateRequest dto,
       List<BinaryContentCreateDto> binaryContentCreateDtos) {
+    log.debug("메세지 유효성 확인");
     if ((dto.content() == null || dto.content().isEmpty()) //컨텐츠와 첨부파일 두개다 없는 경우
         && (binaryContentCreateDtos == null || binaryContentCreateDtos.isEmpty())) {
       log.warn("메세지에 컨텐츠와 첨부파일 둘다 없음");
@@ -151,6 +153,7 @@ public class BasicMessageService implements MessageService {
   }
 
   private void checkMember(UUID channelId, UUID userId) {
+    log.debug("채널에 속한 멤버 여부 확인: channelId={}, userId={}", channelId, userId);
     if (readStatusRepository.findByUserIdAndChannelId(userId, channelId).isEmpty()) {
       log.warn("해당 채널의 멤버가 아님: channelId={}, userId={}", channelId, userId);
       throw new ReadStatusNotFoundException().addDetail("channelId", channelId)
@@ -160,7 +163,10 @@ public class BasicMessageService implements MessageService {
 
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
-        .orElseThrow(() -> new MessageNotFoundException().addDetail("messageId", messageId));
+        .orElseThrow(() -> {
+          log.debug("메세지를 찾을 수 없음: messageId={}", messageId);
+          return new MessageNotFoundException().addDetail("messageId", messageId);
+        });
   }
 
   private void checkAuthor(UUID authorId, UUID userId) {
