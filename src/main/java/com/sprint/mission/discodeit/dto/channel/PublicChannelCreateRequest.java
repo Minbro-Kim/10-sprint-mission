@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.dto.channel;
 
+import com.sprint.mission.discodeit.global.annotation.NotSpace;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -8,6 +9,8 @@ import jakarta.validation.constraints.NotEmpty;
 public record PublicChannelCreateRequest(
     @NotBlank
     String name,
+
+    @NotSpace
     String description
 ) {
 
