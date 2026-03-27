@@ -1,12 +1,13 @@
 package com.sprint.mission.discodeit.dto.user;
 
+import com.sprint.mission.discodeit.global.annotation.annotation.NotSpaceForFrontBack;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 
 @Schema(description = "User 생성 정보")
 public record UserCreateRequest(
+    @NotSpaceForFrontBack
     @NotBlank(message = "사용자 이름을 입력해주세요.")
     String username,
     @Email(message = "이메일 형식이 올바르지 않습니다.")

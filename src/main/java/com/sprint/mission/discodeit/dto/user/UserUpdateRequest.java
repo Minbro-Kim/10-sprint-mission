@@ -1,13 +1,15 @@
 package com.sprint.mission.discodeit.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sprint.mission.discodeit.global.annotation.NotSpace;
+import com.sprint.mission.discodeit.global.annotation.annotation.NotSpace;
+import com.sprint.mission.discodeit.global.annotation.annotation.NotSpaceForFrontBack;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 
 @Schema(description = "수정할 User 정보")
 public record UserUpdateRequest(
     @JsonProperty("newUsername")
+    @NotSpaceForFrontBack
     @NotSpace
     String username,
 
