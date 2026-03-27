@@ -16,6 +16,10 @@ spring:
   sql:
     init:
       mode: always
+  boot:
+    admin:
+      client:
+        url: http://localhost:9090
 
 logging:
   level:

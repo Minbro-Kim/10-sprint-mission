@@ -12,6 +12,10 @@ spring:
   sql:
     init:
       mode: never
+  boot:
+    admin:
+      client:
+        url: ${SPRING_BOOT_ADMIN_CLIENT_URL}
 
 logging:
   level:
