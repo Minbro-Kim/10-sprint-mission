@@ -53,7 +53,6 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
       fos.write(bytes);
     } catch (IOException e) {
-      log.warn("바이너리 컨텐츠 저장 오류 발생: binaryContentId={}", id, e);
       throw new RuntimeException(e);
     }
     log.info("바이너리 컨텐츠 저장 성공: binaryContentId={}", id);
