@@ -12,6 +12,7 @@ import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.NotAllowedInPrivateChannelException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -37,6 +38,7 @@ public class BasicChannelService implements ChannelService {
   private final MessageRepository messageRepository;
   private final UserRepository userRepository;//공개채널에 멤버추가를 위한 의존성
   private final ChannelMapper channelMapper;
+  private final BinaryContentRepository binaryContentRepository;
 
   @Override
   public ChannelDto create(PublicChannelCreateRequest dto) {
@@ -142,10 +144,12 @@ public class BasicChannelService implements ChannelService {
       log.warn("존재하지 않는 채널 삭제 시도: channelId={}", channelId);
       throw new ChannelNotFoundException().addDetail("channelId", channelId);
     }
+    log.debug("채널 삭제 중: 채널 메세지의 첨부파일 제거, channelId={}", channelId);
+    binaryContentRepository.bulkDeleteByChannelId(channelId);//첨부파일 삭제시 연관테이블은 자동삭제
     log.debug("채널 삭제 중: 채널 메세지 삭제, channelId={}", channelId);
-    messageRepository.deleteByChannelId(channelId);//메세지 먼저 삭제해야 바이너리 전부 삭제됨.배치 삭제 필요
+    messageRepository.bulkDeleteByChannelId(channelId);//메세지 삭제
     channelRepository.deleteById(channelId);
-    //readStatusRepository.deleteByChannelId(channelId);데베 설정으로 자동 삭제
+    //readStatusRepository.bulkDeleteByChannelId(channelId);데베 설정으로 자동 삭제
     log.info("채널 삭제 성공: channelId={}", channelId);
   }
 

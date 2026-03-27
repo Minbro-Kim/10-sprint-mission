@@ -5,15 +5,13 @@ import com.sprint.mission.discodeit.entity.Message;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -45,6 +43,8 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
           + "GROUP BY m.channel.id")
   List<LastMessageTimeDto> findAllLastMessagesByChannelId(Set<UUID> channelIds);
 
-  void deleteByChannelId(UUID channelId);
+  @Modifying//벌크쿼리 적용
+  @Query("DELETE FROM Message m WHERE m.channel.id = :channelId")
+  void bulkDeleteByChannelId(UUID channelId);
 
 }
