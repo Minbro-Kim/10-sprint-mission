@@ -56,8 +56,11 @@ public class BasicUserService implements UserService {
     UserStatus userStatus = UserStatus.create(user, Instant.now());
     //모든 공개채널에 대한 읽기 상태 저장
     userRepository.save(user);
-    channelRepository.findAllPublic()
-        .forEach(c -> readStatusRepository.save(ReadStatus.create(user, c, Instant.EPOCH)));
+    log.debug("사용자 생성 중: 모든 공개 채널에 멤버로 추가");
+    List<ReadStatus> readStatuses = channelRepository.findAllPublic().stream()
+        .map(c -> ReadStatus.create(user, c, Instant.EPOCH))
+        .toList();
+    readStatusRepository.saveAll(readStatuses);
     if (binaryContentCreateDto.isPresent()) {
       binaryContentStorage.put(profile.getId(), binaryContentCreateDto.get().bytes());
       log.debug("프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
