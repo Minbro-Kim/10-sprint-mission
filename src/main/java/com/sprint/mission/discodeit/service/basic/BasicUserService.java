@@ -102,6 +102,12 @@ public class BasicUserService implements UserService {
           log.warn("사용자 수정 실패: 존재하지 않는 ID = {}", userId);
           return new UserNotFoundException().addDetail("userId", userId);
         });
+    if (dto.email() != null) {
+      validateEmail(dto.email());
+    }
+    if (dto.username() != null) {
+      validateUsername(dto.username());
+    }
     BinaryContent profile = null;
     log.debug("사용자 수정 중: 프로필 사진 생성");
     if (binaryContentCreateDto.isPresent()) {
