@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "수정할 Message 내용")
 public record MessageUpdateRequest(
-    @NotBlank
+    @NotNull //메세지는 공백 메세지 가능
     String newContent
 ) {
 
