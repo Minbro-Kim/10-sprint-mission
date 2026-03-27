@@ -74,6 +74,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
   @Override
   public ResponseEntity<Resource> download(BinaryContentDto binaryContentDto) {
+    log.debug("바이너리 컨텐츠 다운로드 시도: binaryContentId={}", binaryContentDto.id());
     InputStream is = get(binaryContentDto.id());
     Resource resource = new InputStreamResource(is);
     String encodeFile = UriUtils.encode(binaryContentDto.fileName(), StandardCharsets.UTF_8);
