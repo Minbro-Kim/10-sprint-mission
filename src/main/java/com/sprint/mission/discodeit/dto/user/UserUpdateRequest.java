@@ -5,14 +5,17 @@ import com.sprint.mission.discodeit.global.annotation.annotation.NotSpace;
 import com.sprint.mission.discodeit.global.annotation.annotation.NotSpaceForFrontBack;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 
 @Schema(description = "수정할 User 정보")
 public record UserUpdateRequest(
     @JsonProperty("newUsername")
+    @Size(max = 50)
     @NotSpaceForFrontBack
     @NotSpace
     String username,
 
+    @Size(max = 100)
     @NotSpace
     @Email(message = "이메일 형식이 올바르지 않습니다.")
     @JsonProperty("newEmail")
