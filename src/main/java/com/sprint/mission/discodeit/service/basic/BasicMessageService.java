@@ -164,7 +164,7 @@ public class BasicMessageService implements MessageService {
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
         .orElseThrow(() -> {
-          log.debug("메세지를 찾을 수 없음: messageId={}", messageId);
+          log.warn("메세지를 찾을 수 없음: messageId={}", messageId);
           return new MessageNotFoundException().addDetail("messageId", messageId);
         });
   }
