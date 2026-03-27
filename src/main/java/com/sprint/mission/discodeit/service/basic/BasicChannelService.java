@@ -48,8 +48,10 @@ public class BasicChannelService implements ChannelService {
     channelRepository.save(channel);
     //모든 사용자가 멤버!
     log.debug("공개 채널 생성 중: 모든 사용자 조회 및 읽기 상태 생성&저장");
-    userRepository.findAll()//한번에 저장하는방법?
-        .forEach(m -> readStatusRepository.save(ReadStatus.create(m, channel, Instant.EPOCH)));
+    List<ReadStatus> readStatuses = userRepository.findAll().stream()
+        .map(u -> ReadStatus.create(u, channel, Instant.EPOCH))
+        .toList();
+    readStatusRepository.saveAll(readStatuses);
     log.info("공개 채널 생성 성공: channelId={}", channel.getId());
     return channelMapper.toDto(channel);
   }
@@ -68,10 +70,10 @@ public class BasicChannelService implements ChannelService {
           .addDetail("validMemberSize", members.size());
     }
     log.debug("비공개 채널 생성 중: 멤버에 대한 읽기상태 생성 및 저장");
-    members
-        .forEach(m -> {
-          readStatusRepository.save(ReadStatus.create(m, channel, Instant.EPOCH));
-        });
+    List<ReadStatus> readStatuses = members.stream()
+        .map(u -> ReadStatus.create(u, channel, Instant.EPOCH))
+        .toList();
+    readStatusRepository.saveAll(readStatuses);
     log.info("비공개 채널 생성 성공: channelId={}", channel.getId());
     return channelMapper.toDto(channel);
   }
