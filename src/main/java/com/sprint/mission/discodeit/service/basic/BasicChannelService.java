@@ -42,8 +42,10 @@ public class BasicChannelService implements ChannelService {
   public ChannelDto create(PublicChannelCreateRequest dto) {
     log.debug("공개 채널 생성 시도: channelName={}", dto.name());
     Channel channel = channelMapper.toEntity(dto);
+    log.debug("공개 채널 생성 중: 레포지토리 저장 시도");
     channelRepository.save(channel);
     //모든 사용자가 멤버!
+    log.debug("공개 채널 생성 중: 모든 사용자 조회 및 읽기 상태 생성&저장");
     userRepository.findAll()//한번에 저장하는방법?
         .forEach(m -> readStatusRepository.save(ReadStatus.create(m, channel, Instant.EPOCH)));
     log.info("공개 채널 생성 성공: channelId={}", channel.getId());
@@ -54,13 +56,16 @@ public class BasicChannelService implements ChannelService {
   public ChannelDto create(PrivateChannelCreateRequest dto) {
     log.debug("비공개 채널 생성 시도: channelMembers={}", dto.memberIds());
     Channel channel = channelMapper.toEntity(dto);
+    log.debug("비공개 채널 생성 중: 레포지토리 저장 시도");
     channelRepository.save(channel);
+    log.debug("비공개 채널 생성 중: 요청 멤버 조회, memberIdds={}", dto.memberIds());
     List<User> members = userRepository.findAllById(dto.memberIds());//쿼리 한번으로 조회
     if (members.size() != dto.memberIds().size()) {//멤버가 전부 유저가 아닐때만
       log.warn("존재하지 않는 사용자ID에 대한 비공개 채널 생성 시도");
       throw new UserNotFoundException().addDetail("requestMemberIds", dto.memberIds())
           .addDetail("validMemberSize", members.size());
     }
+    log.debug("비공개 채널 생성 중: 멤버에 대한 읽기상태 생성 및 저장");
     members
         .forEach(m -> {
           readStatusRepository.save(ReadStatus.create(m, channel, Instant.EPOCH));
@@ -137,6 +142,7 @@ public class BasicChannelService implements ChannelService {
       log.warn("존재하지 않는 채널 삭제 시도: channelId={}", channelId);
       throw new ChannelNotFoundException().addDetail("channelId", channelId);
     }
+    log.debug("채널 삭제 중: 채널 메세지 삭제, channelId={}", channelId);
     messageRepository.deleteByChannelId(channelId);//메세지 먼저 삭제해야 바이너리 전부 삭제됨.배치 삭제 필요
     channelRepository.deleteById(channelId);
     //readStatusRepository.deleteByChannelId(channelId);데베 설정으로 자동 삭제
