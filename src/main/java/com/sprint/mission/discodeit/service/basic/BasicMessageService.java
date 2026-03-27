@@ -147,7 +147,6 @@ public class BasicMessageService implements MessageService {
     log.debug("메세지 유효성 확인");
     if ((dto.content() == null || dto.content().isEmpty()) //컨텐츠와 첨부파일 두개다 없는 경우
         && (binaryContentCreateDtos == null || binaryContentCreateDtos.isEmpty())) {
-      log.warn("메세지에 컨텐츠와 첨부파일 둘다 없음");
       throw new InvalidMessageException();
     }
   }
@@ -155,7 +154,6 @@ public class BasicMessageService implements MessageService {
   private void checkMember(UUID channelId, UUID userId) {
     log.debug("채널에 속한 멤버 여부 확인: channelId={}, userId={}", channelId, userId);
     if (readStatusRepository.findByUserIdAndChannelId(userId, channelId).isEmpty()) {
-      log.warn("해당 채널의 멤버가 아님: channelId={}, userId={}", channelId, userId);
       throw new ReadStatusNotFoundException().addDetail("channelId", channelId)
           .addDetail("userId", userId);
     }
@@ -164,7 +162,6 @@ public class BasicMessageService implements MessageService {
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
         .orElseThrow(() -> {
-          log.warn("메세지를 찾을 수 없음: messageId={}", messageId);
           return new MessageNotFoundException().addDetail("messageId", messageId);
         });
   }

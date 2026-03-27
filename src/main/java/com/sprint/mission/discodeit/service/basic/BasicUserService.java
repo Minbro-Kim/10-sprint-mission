@@ -98,10 +98,7 @@ public class BasicUserService implements UserService {
       Optional<BinaryContentCreateDto> binaryContentCreateDto) {
     log.debug("사용자 수정 시도: userId={}", userId);
     User user = userRepository.findByIdFetchUserInfo(userId)
-        .orElseThrow(() -> {
-          log.warn("사용자 수정 실패: 존재하지 않는 ID = {}", userId);
-          return new UserNotFoundException().addDetail("userId", userId);
-        });
+        .orElseThrow(() -> new UserNotFoundException().addDetail("userId", userId));
     if (dto.email() != null) {
       validateEmail(dto.email());
     }
@@ -142,7 +139,6 @@ public class BasicUserService implements UserService {
   private void validateEmail(String email) {
     log.debug("이메일 유효성 검사: email={}", email);
     if (userRepository.existsByEmail(email)) {
-      log.warn("이미 존재하는 이메일: email={}", email);
       throw new EmailAlreadyExistException().addDetail("email", email);
     }
   }
@@ -150,7 +146,6 @@ public class BasicUserService implements UserService {
   private void validateUsername(String username) {
     log.debug("사용자 이름 유효성 검사: username={}", username);
     if (userRepository.existsByUsername(username)) {
-      log.warn("이미 존재하는 사용자 이름: username={}", username);
       throw new UserNameAlreadyExistException().addDetail("username", username);
     }
   }
@@ -163,7 +158,6 @@ public class BasicUserService implements UserService {
   private User get(UUID userId) {
     return userRepository.findById(userId)
         .orElseThrow(() -> {
-          log.warn("존재하지 않는 유저: userId={}", userId);
           return new UserNotFoundException().addDetail("userId", userId);
         });
   }

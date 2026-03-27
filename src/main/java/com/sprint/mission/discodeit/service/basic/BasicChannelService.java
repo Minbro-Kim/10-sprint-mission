@@ -65,7 +65,6 @@ public class BasicChannelService implements ChannelService {
     log.debug("비공개 채널 생성 중: 요청 멤버 조회, memberIdds={}", dto.memberIds());
     List<User> members = userRepository.findAllById(dto.memberIds());//쿼리 한번으로 조회
     if (members.size() != dto.memberIds().size()) {//멤버가 전부 유저가 아닐때만
-      log.warn("존재하지 않는 사용자ID에 대한 비공개 채널 생성 시도");
       throw new UserNotFoundException().addDetail("requestMemberIds", dto.memberIds())
           .addDetail("validMemberSize", members.size());
     }
@@ -131,7 +130,6 @@ public class BasicChannelService implements ChannelService {
     log.debug("채널 수정 시도: channelId={}", id);
     Channel channel = get(id);
     if (channel.getType() == ChannelType.PRIVATE) {
-      log.warn("비공개 채널 수정 시도: channelId={}", channel.getId());
       throw new NotAllowedInPrivateChannelException().addDetail("channelId", id);
     }
     channel.update(dto.name(), dto.description());
@@ -143,7 +141,6 @@ public class BasicChannelService implements ChannelService {
   public void delete(UUID channelId) {
     log.debug("채널 삭제 시도: channelId={}", channelId);
     if (!channelRepository.existsById(channelId)) {
-      log.warn("존재하지 않는 채널 삭제 시도: channelId={}", channelId);
       throw new ChannelNotFoundException().addDetail("channelId", channelId);
     }
     log.debug("채널 삭제 중: 채널 메세지의 첨부파일 제거, channelId={}", channelId);
