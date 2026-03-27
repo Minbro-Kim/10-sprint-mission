@@ -48,6 +48,7 @@ public class BasicUserService implements UserService {
     validateEmail(dto.email());
     validateUsername(dto.username());
     //프로필 사진
+    log.debug("사용자 생성 중: 프로필 사진 생성");
     BinaryContent profile = null;
     if (binaryContentCreateDto.isPresent()) {
       profile = binaryContentMapper.toEntity(binaryContentCreateDto.get());
@@ -55,6 +56,7 @@ public class BasicUserService implements UserService {
     User user = userMapper.toEntity(dto, profile);
     UserStatus userStatus = UserStatus.create(user, Instant.now());
     //모든 공개채널에 대한 읽기 상태 저장
+    log.debug("사용자 생성 중: 사용자 저장 시도");
     userRepository.save(user);
     log.debug("사용자 생성 중: 모든 공개 채널에 멤버로 추가");
     List<ReadStatus> readStatuses = channelRepository.findAllPublic().stream()
@@ -101,6 +103,7 @@ public class BasicUserService implements UserService {
           return new UserNotFoundException().addDetail("userId", userId);
         });
     BinaryContent profile = null;
+    log.debug("사용자 수정 중: 프로필 사진 생성");
     if (binaryContentCreateDto.isPresent()) {
       profile = binaryContentMapper.toEntity(binaryContentCreateDto.get());
       binaryContentRepository.save(profile);//profile id가 필요하기 때문에
@@ -124,19 +127,24 @@ public class BasicUserService implements UserService {
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시도: userId={}", userId);
     User user = get(userId);
-    readStatusRepository.deleteByUserId(userId);//삭제된 사용자를 공개채널 멤버나 프라이빗 채널 멤버에서 제거
+    log.debug("사용자 삭제 중: 읽기 상태에서 사용자 제거");
+    readStatusRepository.deleteByUserId(userId);//삭제된 사용자를 공개채널 멤버나 프라이빗 채널 멤버에서 제거(벌크)
     userRepository.deleteById(userId);
     log.info("사용자 삭제 성공: userId={}", userId);
   }
 
   private void validateEmail(String email) {
+    log.debug("이메일 유효성 검사: email={}", email);
     if (userRepository.existsByEmail(email)) {
+      log.warn("이미 존재하는 이메일: email={}", email);
       throw new EmailAlreadyExistException().addDetail("email", email);
     }
   }
 
   private void validateUsername(String username) {
+    log.debug("사용자 이름 유효성 검사: username={}", username);
     if (userRepository.existsByUsername(username)) {
+      log.warn("이미 존재하는 사용자 이름: username={}", username);
       throw new UserNameAlreadyExistException().addDetail("username", username);
     }
   }
@@ -148,6 +156,9 @@ public class BasicUserService implements UserService {
 
   private User get(UUID userId) {
     return userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException().addDetail("userId", userId));
+        .orElseThrow(() -> {
+          log.warn("존재하지 않는 유저: userId={}", userId);
+          return new UserNotFoundException().addDetail("userId", userId);
+        });
   }
 }
