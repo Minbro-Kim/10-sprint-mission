@@ -1,5 +1,6 @@
-package com.sprint.mission.discodeit.global.annotation;
+package com.sprint.mission.discodeit.global.annotation.annotation;
 
+import com.sprint.mission.discodeit.global.annotation.validator.NotSpaceValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.ElementType;
