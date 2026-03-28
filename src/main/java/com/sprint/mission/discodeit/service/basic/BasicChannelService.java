@@ -62,7 +62,7 @@ public class BasicChannelService implements ChannelService {
     Channel channel = channelMapper.toEntity(dto);
     log.debug("비공개 채널 생성 중: 레포지토리 저장 시도");
     channelRepository.save(channel);
-    log.debug("비공개 채널 생성 중: 요청 멤버 조회, memberIdds={}", dto.memberIds());
+    log.debug("비공개 채널 생성 중: 요청 멤버 조회, memberIds={}", dto.memberIds());
     List<User> members = userRepository.findAllById(dto.memberIds());//쿼리 한번으로 조회
     if (members.size() != dto.memberIds().size()) {//멤버가 전부 유저가 아닐때만
       throw new UserNotFoundException().addDetail("requestMemberIds", dto.memberIds())
