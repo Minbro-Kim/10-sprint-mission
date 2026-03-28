@@ -13,7 +13,6 @@ public record PublicChannelUpdateRequest(
     String name,
 
     @Size(max = 500)
-    @NotSpace
     @JsonProperty("newDescription")
     String description
 ) {
