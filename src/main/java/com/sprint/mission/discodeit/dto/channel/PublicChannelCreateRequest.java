@@ -12,7 +12,6 @@ public record PublicChannelCreateRequest(
     String name,
 
     @Size(max = 500)
-    @NotSpace
     String description
 ) {
 
