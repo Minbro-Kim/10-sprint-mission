@@ -98,13 +98,15 @@ public class BasicMessageService implements MessageService {
         cursor);
     List<UUID> messageIds = slice.stream().map(Message::getId).toList();
     Map<UUID, List<BinaryContent>> attachmentMap = new HashMap<>();//바이너리 컨텐츠 한번에 가져오기
-    messageRepository.findAllByIdInFetchAttachments(messageIds)
-        .forEach((m) -> {
-          //repo에서 패치로 바이너리 컨텐츠 가져오면 내부 순서가 반대로 되기때문에 순서 뒤집어야함
-          List<BinaryContent> reversedList = new ArrayList<>(m.getAttachments());
-          Collections.reverse(reversedList);
-          attachmentMap.put(m.getId(), reversedList);
-        });
+    if (!messageIds.isEmpty()) {
+      messageRepository.findAllByIdInFetchAttachments(messageIds)
+          .forEach((m) -> {
+            //repo에서 패치로 바이너리 컨텐츠 가져오면 내부 순서가 반대로 되기때문에 순서 뒤집어야함
+            List<BinaryContent> reversedList = new ArrayList<>(m.getAttachments());
+            Collections.reverse(reversedList);
+            attachmentMap.put(m.getId(), reversedList);
+          });
+    }
     Slice<MessageDto> sliceDto = slice.map(
         s -> messageMapper.toDto(s, attachmentMap.get(s.getId())));
     Instant nextCursor = null;
