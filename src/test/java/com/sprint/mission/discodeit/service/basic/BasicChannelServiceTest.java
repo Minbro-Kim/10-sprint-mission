@@ -240,6 +240,17 @@ class BasicChannelServiceTest {
   }
 
   @Test
+  @DisplayName("실패: 유효하지 않은 사용자 아이디로 채널 목록 조회 실패")
+  void findAllByUserIdFailure() {
+    //given
+    UUID userId = UUID.randomUUID();
+    given(userRepository.existsById(userId)).willReturn(false);
+
+    //when & then
+    assertThrows(UserNotFoundException.class, () -> channelService.findAllByUserId(userId));
+  }
+
+  @Test
   @DisplayName("성공: 유효한 채널 삭제 성공")
   void deleteChannelSuccess() {
     //given

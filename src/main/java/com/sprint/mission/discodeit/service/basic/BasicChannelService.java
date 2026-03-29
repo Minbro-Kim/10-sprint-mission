@@ -87,6 +87,9 @@ public class BasicChannelService implements ChannelService {
   @Override
   @Transactional(readOnly = true)
   public List<ChannelDto> findAllByUserId(UUID userId) {
+    if (!userRepository.existsById(userId)) {
+      throw new UserNotFoundException().addDetail("userId", userId);
+    }
     List<ChannelDto> response = new ArrayList<>();
         /*
             사용자가 속한 채널 = 비공개+공개
