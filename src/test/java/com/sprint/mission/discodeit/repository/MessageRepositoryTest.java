@@ -183,7 +183,7 @@ class MessageRepositoryTest {
 
   @Test
   @DisplayName("실패: 존재하지 않는 채널 아이디로 마지막 메시지를 조회 시, 빈 Optional 반환")
-  void findLastMessage_Empty() {
+  void findLastMessageByWrongChannelId() {
     //given
     UUID wrongId = UUID.randomUUID();
 
@@ -193,7 +193,7 @@ class MessageRepositoryTest {
     //then
     assertTrue(result.isEmpty());
   }
-  
+
   @Test
   @DisplayName("성공: 채널 아이디로 각 채널의 마지막 메세지 시간 찾기")
   void findAllLastMessagesByChannelIdSuccess() {
@@ -214,7 +214,7 @@ class MessageRepositoryTest {
 
   @Test
   @DisplayName("실패: 빈 아이디 목록으로 마지막 메세지 시간 조회 시 빈 리스트 반환")
-  void findAllLastMessages_Empty() {
+  void findAllLastMessagesByEmptyIdSet() {
     //when
     List<LastMessageTimeDto> result = messageRepository.findAllLastMessagesByChannelId(Set.of());
 
