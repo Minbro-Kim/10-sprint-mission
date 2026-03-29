@@ -25,11 +25,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @DataJpaTest
-//@EnableJpaAuditing
+@EnableJpaAuditing
 @ActiveProfiles("test")
 class MessageRepositoryTest {
 
