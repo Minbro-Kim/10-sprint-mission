@@ -217,6 +217,7 @@ class BasicChannelServiceTest {
     ReflectionTestUtils.setField(c1, "id", c1Id);
     ReflectionTestUtils.setField(c2, "id", c2Id);
 
+    given(userRepository.existsById(userId)).willReturn(true);
     given(readStatusRepository.findAllByUserIdFetchChannel(userId)).willReturn(readStatusesByUser);
     given(readStatusRepository.findAllByChannelIdInFetchUser(channelKeySet)).willReturn(
         readStatusesByChannel);
