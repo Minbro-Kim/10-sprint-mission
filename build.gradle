@@ -60,3 +60,20 @@ jacocoTestReport {
         html.required = true
     }
 }
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'PACKAGE'//'BUNDLE' //'CLASS'
+            // 경로
+            includes = ['com.sprint.mission.discodeit.service.basic']
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.6
+            }
+        }
+    }
+}
+// 빌드 시 coverage 체크를 강제
+check.dependsOn jacocoTestCoverageVerification
