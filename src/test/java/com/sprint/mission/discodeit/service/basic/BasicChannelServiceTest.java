@@ -100,11 +100,6 @@ class BasicChannelServiceTest {
 
 
   @Test
-  @DisplayName("실패: ")
-  void createPublicChannelFailure() {
-  }
-
-  @Test
   @DisplayName("성공: 비공개 채널(모든 멤버가 유효) 생성 성공")
   void createPrivateChannelSuccess() {
     //given
