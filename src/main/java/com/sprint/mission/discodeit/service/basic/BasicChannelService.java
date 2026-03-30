@@ -48,7 +48,7 @@ public class BasicChannelService implements ChannelService {
     channelRepository.save(channel);
     //모든 사용자가 멤버!
     log.debug("공개 채널 생성 중: 모든 사용자 조회 및 읽기 상태 생성&저장");
-    List<ReadStatus> readStatuses = userRepository.findAll().stream()
+    List<ReadStatus> readStatuses = userRepository.findAllFetchUserInfo().stream()
         .map(u -> ReadStatus.create(u, channel, Instant.EPOCH))
         .toList();
     readStatusRepository.saveAll(readStatuses);
@@ -63,7 +63,7 @@ public class BasicChannelService implements ChannelService {
     log.debug("비공개 채널 생성 중: 레포지토리 저장 시도");
     channelRepository.save(channel);
     log.debug("비공개 채널 생성 중: 요청 멤버 조회, memberIds={}", dto.memberIds());
-    List<User> members = userRepository.findAllById(dto.memberIds());//쿼리 한번으로 조회
+    List<User> members = userRepository.findAllByIdFetchUserInfo(dto.memberIds());//쿼리 한번으로 조회
     if (members.size() != dto.memberIds().size()) {//멤버가 전부 유저가 아닐때만
       throw new UserNotFoundException().addDetail("requestMemberIds", dto.memberIds())
           .addDetail("validMemberSize", members.size());

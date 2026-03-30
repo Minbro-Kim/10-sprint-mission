@@ -74,7 +74,7 @@ class BasicChannelServiceTest {
         List.of(mock(UserDto.class), mock(UserDto.class), mock(UserDto.class)));
 
     given(channelMapper.toEntity(dto)).willReturn(channel);
-    given(userRepository.findAll()).willReturn(users);
+    given(userRepository.findAllFetchUserInfo()).willReturn(users);
     given(channelMapper.toDto(channel)).willReturn(channelDto);
 
     //when
@@ -112,7 +112,7 @@ class BasicChannelServiceTest {
         List.of(mock(UserDto.class), mock(UserDto.class)));
 
     given(channelMapper.toEntity(dto)).willReturn(channel);
-    given(userRepository.findAllById(dto.memberIds())).willReturn(users);
+    given(userRepository.findAllByIdFetchUserInfo(dto.memberIds())).willReturn(users);
     given(channelMapper.toDto(channel)).willReturn(channelDto);
 
     //when
@@ -145,7 +145,7 @@ class BasicChannelServiceTest {
     List<User> users = List.of();//멤버 유효 0
 
     given(channelMapper.toEntity(dto)).willReturn(channel);
-    given(userRepository.findAllById(dto.memberIds())).willReturn(users);
+    given(userRepository.findAllByIdFetchUserInfo(dto.memberIds())).willReturn(users);
 
     //when & then
     assertThrows(UserNotFoundException.class, () -> channelService.create(dto));
