@@ -2,26 +2,17 @@ package com.sprint.mission.discodeit.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
-import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
-import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
-import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
@@ -145,7 +136,8 @@ public class MessageIntegrationTest {
     List<BinaryContent> attachments2 = List.of(bc3);
     Message message1 = Message.create("m1", publicChannel, user1, attachments1);
     Message message2 = Message.create("m2", publicChannel, user2, attachments2);
-    messageRepository.saveAll(List.of(message1, message2));
+    Message message3 = Message.create("m3", publicChannel, user3, attachments1);
+    messageRepository.saveAll(List.of(message1, message2, message3));
     m1Id = message1.getId();
     m2Id = message2.getId();
 
@@ -203,6 +195,8 @@ public class MessageIntegrationTest {
     Message message = messageRepository.findById(newMessageId).orElseThrow();
     assertEquals(2, message.getAttachments().size());
     assertEquals(request.content(), message.getContent());
+    assertEquals(u1Id, message.getAuthor().getId());
+    assertEquals(c1Id, message.getChannel().getId());
   }
 
   @Test
@@ -285,7 +279,7 @@ public class MessageIntegrationTest {
 
   @Test
   @DisplayName("실패: 유효하지 않은 메세지 아이디로 사용자 삭제 실패(404 Not found)")
-  void deleteUserByWrongUserIdFailure() throws Exception {
+  void deleteMessageByWrongUserIdFailure() throws Exception {
     //given
     UUID wrongMessageId = UUID.randomUUID();
 
@@ -296,5 +290,32 @@ public class MessageIntegrationTest {
         .andExpect(
             jsonPath("$.exceptionType").value(MessageNotFoundException.class.getSimpleName()));
 
+  }
+
+
+  @Test
+  @DisplayName("성공: 채널 아이디로 페이지네이션이 적용된 메세지 목록 조회 성공")
+  void findMessagesByChannelIdSuccess() throws Exception {
+    // when & then
+    mockMvc.perform(get("/api/messages")
+            .param("channelId", c1Id.toString())
+            .param("size", "2")
+            .param("sort", "createdAt,desc")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.size()").value(2))
+        .andExpect(jsonPath("$.hasNext").value(true));
+  }
+
+  @Test
+  @DisplayName("성공: 페이지네이션 기본 값으로 채널 아이디로 페이지네이션이 적용된 메세지 목록 조회 성공")
+  void findMessagesByChannelIdWithDefaultPaginationSuccess() throws Exception {
+    // when & then
+    mockMvc.perform(get("/api/messages")
+            .param("channelId", c1Id.toString())
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.size()").value(3))//기본 50
+        .andExpect(jsonPath("$.hasNext").value(false));
   }
 }

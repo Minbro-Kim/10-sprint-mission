@@ -215,7 +215,7 @@ class MessageControllerTest {
 
   @Test
   @DisplayName("실패: 유효하지 않은 메세지 아이디로 사용자 삭제 실패(404 Not found)")
-  void deleteUserByWrongUserIdFailure() throws Exception {
+  void deleteMessageByWrongUserIdFailure() throws Exception {
     //given
     UUID wrongMessageId = UUID.randomUUID();
     willThrow(new MessageNotFoundException()).given(messageService).delete(eq(wrongMessageId));
