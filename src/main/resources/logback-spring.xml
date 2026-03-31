@@ -10,7 +10,7 @@
    {로거 이름(최대 36글자)} - {로그 메시지}{줄바꿈}-->
   <!--  logger{}는 글자 줄이기 규칙. 앞의 숫자는 정렬및 출력칺수-->
   <property name="LOG_PATTERN"
-    value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %-36logger{36} - %msg%n"/>
+    value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %-36logger{36} [%X{request_id} | %X{request_method} | %X{request_url}] - %msg%n"/>
 
   <!--  콘솔 및 파일에 기록-->
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
