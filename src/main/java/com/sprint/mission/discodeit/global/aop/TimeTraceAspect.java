@@ -34,9 +34,10 @@ public class TimeTraceAspect {
         } else {
           log.debug("[OK] {} | {}ms", taskName, time);
         }
-      } else {
-        log.warn("[FAIL] {} | {}ms", taskName, time);
       }
+//      else {/예외 로그가 있으므로 제외
+//        log.warn("[FAIL] {} | {}ms", taskName, time);
+//      }
 
     }
   }
