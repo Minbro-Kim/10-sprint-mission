@@ -31,6 +31,7 @@ Dockerfile
 .discodeit
 out/
 .logs
+*.env
 
 ### 맥북설정 파일
 .DS_Store
