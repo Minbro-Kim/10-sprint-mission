@@ -105,6 +105,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
       GetObjectRequest getObjectRequest = GetObjectRequest.builder()
           .bucket(s3Properties.getBucket())
           .key(key)
+          .responseContentType(contentType)
           .build();
       log.debug("S3 URL 가져오기 객체 Request 생성 성공: fileId={}", key);
       GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
@@ -125,6 +126,5 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
           .addDetail("fileId", key)
           .addDetail("errorMessage", e.getMessage());
     }
-
   }
 }
