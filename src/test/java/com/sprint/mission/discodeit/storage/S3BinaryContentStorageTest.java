@@ -57,7 +57,7 @@ class S3BinaryContentStorageTest {
   void putFileToS3Success() {
     //given
     UUID fileId = UUID.randomUUID();
-    String key = fileId.toString();
+    String key = "uploads/" + fileId.toString();
     given(s3Properties.getBucket()).willReturn("bucketName");
 
     //when
@@ -98,7 +98,7 @@ class S3BinaryContentStorageTest {
   void getFileFromS3Success() throws IOException {
     //given
     UUID fileId = UUID.randomUUID();
-    String key = fileId.toString();
+    String key = "uploads/" + fileId.toString();
     byte[] expectedBytes = new byte[]{1, 2, 3};
     ResponseBytes<GetObjectResponse> objectBytes = mock(ResponseBytes.class);
     given(s3Properties.getBucket()).willReturn("bucketName");
