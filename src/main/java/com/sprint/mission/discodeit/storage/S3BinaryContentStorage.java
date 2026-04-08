@@ -34,12 +34,13 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   private final S3Client s3Client;
   private final S3Presigner s3Presigner;
   private final S3Properties s3Properties;
+  private static final String FILE_PREFIX = "uploads/";
 
   @Override
   public UUID put(UUID id, byte[] bytes) {
     try {
       log.debug("S3 파일 업로드 시도: fileId={}", id);
-      String key = id.toString();
+      String key = generateKey(id);
       log.debug("S3 파일 업로드 키 변환 성공: fileId={}", id);
       PutObjectRequest putObjectRequest = PutObjectRequest.builder()
           .bucket(s3Properties.getBucket())
@@ -65,7 +66,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   public InputStream get(UUID id) {
     try {
       log.debug("S3 파일 가져오기 시도: fileId={}", id);
-      String key = id.toString();
+      String key = generateKey(id);
       log.debug("S3 파일 가져오기 키 변환 성공: fileId={}", id);
       GetObjectRequest getObjectRequest = GetObjectRequest.builder()
           .bucket(s3Properties.getBucket())
@@ -90,7 +91,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   @Override
   public ResponseEntity<?> download(BinaryContentDto binaryContentDto) {
     log.debug("S3 파일 다운로드 시도: fileId={}", binaryContentDto.id());
-    String key = binaryContentDto.id().toString();
+    String key = generateKey(binaryContentDto.id());
     log.debug("S3 파일 다운로드 키 변환 성공: fileId={}", binaryContentDto.id());
     String presignedUrl = generatePresignedUrl(key, binaryContentDto.contentType());
     log.info("S3 파일 다운로드 성공: fileId={}", binaryContentDto.id());
@@ -126,5 +127,9 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
           .addDetail("fileId", key)
           .addDetail("errorMessage", e.getMessage());
     }
+  }
+
+  private String generateKey(UUID id) {
+    return FILE_PREFIX + id.toString();
   }
 }
