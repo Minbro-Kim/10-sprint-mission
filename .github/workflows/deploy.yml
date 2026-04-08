@@ -71,7 +71,7 @@ jobs:
             --cluster ${{ vars.ECS_CLUSTER }} \
             --service ${{ vars.ECS_SERVICE }} \
             --desired-count 0 \
-            --deployment-configuration "minimumHealthyPercent=0"
+            --deployment-configuration "minimumHealthyPercent=0,maximumPercent=100"
           
           # 실행 중인 task 종료까지 대기
           if [ -n "$TASK_ARNS" ] && [ "$TASK_ARNS" != "None" ]; then
@@ -89,7 +89,7 @@ jobs:
             --service ${{ vars.ECS_SERVICE }} \
             --task-definition $NEW_TASK_DEFINITION_ARN \
             --desired-count 1 \
-            --deployment-configuration "minimumHealthyPercent=100"
+            --deployment-configuration "minimumHealthyPercent=0,maximumPercent=100"
 
       - name: ECS 배포 완료 대기
         run: |
@@ -98,6 +98,13 @@ jobs:
             --services ${{ vars.ECS_SERVICE }}
           
           echo "✅ 새로운 배포가 완료되었습니다!!!!"
+
+      - name: ECS 비율 설정 복구
+        run: |
+          aws ecs update-service \
+            --cluster ${{ vars.ECS_CLUSTER }} \
+            --service ${{ vars.ECS_SERVICE }} \
+            --deployment-configuration "minimumHealthyPercent=100,maximumPercent=200"
 
       - name: ECS 배포 상태 확인
         run: |
