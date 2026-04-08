@@ -23,7 +23,7 @@ services:
   discodeit:
     container_name: discodeit-app
     build: .
-    image: discodeit:local # 이미지 이름
+    image: discodeit:local-slim # 이미지 이름
     ports:
       - '8081:80'
     networks:
