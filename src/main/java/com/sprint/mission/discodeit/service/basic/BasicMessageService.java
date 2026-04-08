@@ -9,8 +9,12 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ExceptionCode;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.message.InvalidMessageException;
+import com.sprint.mission.discodeit.exception.message.MessageAuthorOnlyException;
+import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
+import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
@@ -19,8 +23,8 @@ import com.sprint.mission.discodeit.service.MessageService;
 
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -28,6 +32,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -38,7 +43,6 @@ public class BasicMessageService implements MessageService {
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
   //
-  private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentMapper binaryContentMapper;
   private final MessageMapper messageMapper;
   private final ReadStatusRepository readStatusRepository;
@@ -48,12 +52,16 @@ public class BasicMessageService implements MessageService {
   @Override
   public MessageDto create(MessageCreateRequest dto,
       List<BinaryContentCreateDto> binaryContentCreateDtos) {
+    log.debug("메세지 생성 시도: channelId={}, authorId={}", dto.channelId(), dto.authorId());
+    log.debug("메세지 생성 중: 작성자 조회, authorId={}", dto.authorId());
     User user = userRepository.findById(dto.authorId())
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new UserNotFoundException().addDetail("userId", dto.authorId()));
+    log.debug("메세지 생성 중: 채널 조회, channelId={}", dto.channelId());
     Channel channel = channelRepository.findById(dto.channelId())
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.CHANNEL_NOT_FOUND));
+        .orElseThrow(() -> new ChannelNotFoundException().addDetail("channelId", dto.channelId()));
     checkMember(dto.channelId(), dto.authorId());
     checkValidate(dto, binaryContentCreateDtos);
+    log.debug("메세지 생성 중: 첨부파일 생성");
     List<BinaryContent> attachments = new ArrayList<>();
     binaryContentCreateDtos
         .forEach((attachment) -> {
@@ -64,7 +72,11 @@ public class BasicMessageService implements MessageService {
     messageRepository.save(message);
     for (int i = 0; i < binaryContentCreateDtos.size(); i++) {
       binaryContentStorage.put(attachments.get(i).getId(), binaryContentCreateDtos.get(i).bytes());
+      log.debug("메세지 첨부파일 저장: messageId={}, binaryContentId={}", message.getId(),
+          attachments.get(i).getId());
     }
+    log.info("메세지 생성 성공: channelId={}, authorId={}, messageId={}", channel.getId(), user.getId(),
+        message.getId());
     return messageMapper.toDto(message);
   }
 
@@ -86,13 +98,13 @@ public class BasicMessageService implements MessageService {
         cursor);
     List<UUID> messageIds = slice.stream().map(Message::getId).toList();
     Map<UUID, List<BinaryContent>> attachmentMap = new HashMap<>();//바이너리 컨텐츠 한번에 가져오기
-    messageRepository.findAllByIdInFetchAttachments(messageIds)
-        .forEach((m) -> {
-          //repo에서 패치로 바이너리 컨텐츠 가져오면 내부 순서가 반대로 되기때문에 순서 뒤집어야함
-          List<BinaryContent> reversedList = new ArrayList<>(m.getAttachments());
-          Collections.reverse(reversedList);
-          attachmentMap.put(m.getId(), reversedList);
-        });
+    if (!messageIds.isEmpty()) {
+      messageRepository.findAllByIdInFetchAttachments(messageIds)
+          .forEach((m) -> {
+            List<BinaryContent> binaryList = new ArrayList<>(m.getAttachments());
+            attachmentMap.put(m.getId(), binaryList);
+          });
+    }
     Slice<MessageDto> sliceDto = slice.map(
         s -> messageMapper.toDto(s, attachmentMap.get(s.getId())));
     Instant nextCursor = null;
@@ -105,16 +117,19 @@ public class BasicMessageService implements MessageService {
 
   @Override
   public MessageDto update(UUID id, MessageUpdateRequest dto) {
+    log.debug("메세지 수정 시도: messageId={}", id);
     Message message = get(id);
     //인증인가 구현후 아래 유효성 검증 도입
     //checkMember(message.getChannelId(), userId);
     //checkAuthor(message.getAuthorId(), userId);
     message.update(dto.newContent(), null);//첨부파일 변경을 하려면 별도로 메서드 필요
+    log.info("메세지 수정 성공:  messageId={}", message.getId());
     return messageMapper.toDto(message);
   }
 
   @Override
   public void delete(UUID messageId) {
+    log.debug("메세지 삭제 시도: messageId={}", messageId);
     Message message = get(messageId);
     // 아래 유효성 검증은 인증/인가 추가후
     //checkMember(message.getChannelId(), userId);
@@ -124,31 +139,37 @@ public class BasicMessageService implements MessageService {
 //          .forEach(b -> binaryContentRepository.deleteById(b.getId()));//첨부파일 있는경우만 지우기
 //    }
     messageRepository.deleteById(messageId);
-
+    log.info("메세지 삭제 성공: messageId={}", message.getId());
   }
 
   private void checkValidate(MessageCreateRequest dto,
       List<BinaryContentCreateDto> binaryContentCreateDtos) {
+    log.debug("메세지 유효성 확인");
     if ((dto.content() == null || dto.content().isEmpty()) //컨텐츠와 첨부파일 두개다 없는 경우
         && (binaryContentCreateDtos == null || binaryContentCreateDtos.isEmpty())) {
-      throw new BusinessLogicException(ExceptionCode.INVALID_MESSAGE);
+      throw new InvalidMessageException();
     }
   }
 
   private void checkMember(UUID channelId, UUID userId) {
+    log.debug("채널에 속한 멤버 여부 확인: channelId={}, userId={}", channelId, userId);
     if (readStatusRepository.findByUserIdAndChannelId(userId, channelId).isEmpty()) {
-      throw new BusinessLogicException(ExceptionCode.READ_STATUS_NOT_FOUND);
+      throw new ReadStatusNotFoundException().addDetail("channelId", channelId)
+          .addDetail("userId", userId);
     }
   }
 
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
-        .orElseThrow(() -> new BusinessLogicException(ExceptionCode.MESSAGE_NOT_FOUND));
+        .orElseThrow(() -> {
+          return new MessageNotFoundException().addDetail("messageId", messageId);
+        });
   }
 
   private void checkAuthor(UUID authorId, UUID userId) {
     if (!authorId.equals(userId)) {
-      throw new BusinessLogicException(ExceptionCode.MESSAGE_AUTHOR_ONLY);
+      throw new MessageAuthorOnlyException().addDetail("authorId", authorId)
+          .addDetail("userId", userId);
     }
   }
 }

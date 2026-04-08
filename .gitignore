@@ -44,3 +44,5 @@ out/
 
 #추가 생성 파일 제외
 out/
+.env
+.logs

@@ -1,31 +1,63 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: discodeit
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USER_NAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
   jpa:
-    hibernate:
-      ddl-auto: none # DDL설정 개발 단계는 update, 운영은 none 권장create는 매번 드랍하고 생성, update는 수정사항만, none은 안건드린다.
-    show-sql: true      # 실행 쿼리 확인
-    properties:
-      hibernate:
-        format_sql: true # SQL 포맷팅 가독성
     open-in-view: false
-  sql:
-    init:
-      mode: always
-    #use_sql_comments: true
-  logging:
-    level:
-      org.hibernate.SQL: debug
-      org.hibernate.jdbc.bind: trace
+    hibernate:
+      ddl-auto: validate # 설정이 같은지만 체크
+  servlet:
+    multipart:
+      maxFileSize: 10MB # 파일 하나의 최대 크기
+      maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
+  boot:
+    admin:
+      client:
+        instance:
+          name: discodeit
+
+logging:
+  level:
+    root: info
+
 # repo 구현체 선택
 discodeit:
   storage: # storage 저장 방식
     type: local # file
     local:
       root-path: .discodeit # 파일레포 저장 위치
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "health", "info", "metrics", "loggers" ]
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  application:
+    name: ${spring.application.name}
+    version: 1.7.0
+  java:
+    version: 17
+  spring-boot:
+    version: 3.5.10
+  configs:
+    datasource:
+      url: ${spring.datasource.url}
+      driver-class-name: ${spring.datasource.driver-class-name}
+    jpa:
+      ddl-auto: ${spring.jpa.hibernate.ddl-auto}
+    storage:
+      type: ${discodeit.storage.type}
+      path: ${discodeit.storage.local.root-path}
+    multipart:
+      max-file-size: ${spring.servlet.multipart.maxFileSize}
+      max-request-size: ${spring.servlet.multipart.maxRequestSize}
 

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <!--  로그 저장경로 property로 설정하기-->
+  <property name="LOG_PATH" value="./.logs"/>
+
+  <!--  로깅 패턴 정의하기-->
+  <!--  {년}-{월}-{일} {시}:{분}:{초}:{밀리초}
+   [{스레드명}] {로그 레벨(5글자로 맞춤)}
+   {로거 이름(최대 36글자)} - {로그 메시지}{줄바꿈}-->
+  <!--  logger{}는 글자 줄이기 규칙. 앞의 숫자는 정렬및 출력칺수-->
+  <property name="LOG_PATTERN"
+    value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %-36logger{36} [%X{request_id} | %X{request_method} | %X{request_url}] - %msg%n"/>
+
+  <!--  콘솔 및 파일에 기록-->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!--   현재 작성되고 있는 로그 파일-->
+    <file>${LOG_PATH}/discodeit.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!--      로그 파일이 롤링될 때 이름 이걸로 주기 결정(현재 d까지 설정이기 떄문에 하루단위)-->
+      <fileNamePattern>${LOG_PATH}/discodeit.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <!-- 보관기간-->
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+  <!--  로그 남길 때 어떤 도구를 활성화 할지-->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+  <!--파일 저장은 prod 환경에서만, 위에 설정은 누적-->
+  <springProfile name="prod">
+    <root level="INFO">
+      <appender-ref ref="FILE"/>
+    </root>
+  </springProfile>
+
+</configuration>

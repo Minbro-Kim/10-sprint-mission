@@ -2,42 +2,78 @@ package com.sprint.mission.discodeit.exception;
 
 
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.validation.BindingResult;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ErrorResponse {
 
-  private List<FieldError> fieldErrors;
-  private List<ConstraintViolationError> violationErrors;
-  private Integer code;
+  private Instant timestamp;
+  private String code;
   private String message;
+  private Map<String, Object> details;
+  private String exceptionType;//예외 클래스 이름
+  private int status;
 
-  private ErrorResponse(List<FieldError> fieldErrors,
-      List<ConstraintViolationError> violationErrors) {
-    this.fieldErrors = fieldErrors;
-    this.violationErrors = violationErrors;
+
+  public static ErrorResponse of(Exception e) {
+    return new ErrorResponse(
+        Instant.now(),
+        ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
+        e.getMessage(),
+        new HashMap<>(),
+        e.getClass().getSimpleName(),
+        500
+    );
   }
 
-  private ErrorResponse(Integer code, String message) {
-    this.code = code;
-    this.message = message;
+  public static ErrorResponse of(MethodArgumentNotValidException e) {
+    Map<String, Object> details = new HashMap<>();
+    details.put("errors", FieldError.of(e.getBindingResult()));
+    return new ErrorResponse(
+        Instant.now(),
+        ErrorCode.BAD_REQUEST.getCode(),
+        ErrorCode.BAD_REQUEST.getMessage(),
+        details,
+        e.getClass().getSimpleName(),
+        400
+    );
   }
 
-  public static ErrorResponse of(BindingResult bindingResult) {
-    return new ErrorResponse(FieldError.of(bindingResult), null);
+  public static ErrorResponse of(ConstraintViolationException e) {
+    Map<String, Object> details = new HashMap<>();
+    details.put("errors", ConstraintViolationError.of(e.getConstraintViolations()));
+    return new ErrorResponse(
+        Instant.now(),
+        ErrorCode.BAD_REQUEST.getCode(),
+        ErrorCode.BAD_REQUEST.getMessage(),
+        details,
+        e.getClass().getSimpleName(),
+        400
+    );
   }
 
-  public static ErrorResponse of(Set<ConstraintViolation<?>> violations) {
-    return new ErrorResponse(null, ConstraintViolationError.of(violations));
-  }
-
-  public static ErrorResponse of(Integer code, String message) {
-    return new ErrorResponse(code, message);
+  public static ErrorResponse of(DiscodeitException e) {
+    return new ErrorResponse(
+        e.getTimestamp(),
+        e.getErrorCode().getCode(),
+        e.getMessage(),
+        e.getDetails(),
+        e.getClass().getSimpleName(),
+        e.getErrorCode().getStatus()
+    );
   }
 
   //내부 dto

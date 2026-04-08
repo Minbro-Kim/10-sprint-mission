@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriUtils;
 
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "discodeit.storage.type", havingValue = "local")
 public class LocalBinaryContentStorage implements BinaryContentStorage {
@@ -53,6 +55,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+    log.info("바이너리 컨텐츠 저장 성공: binaryContentId={}", id);
     return id;
   }
 
@@ -71,9 +74,11 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
   @Override
   public ResponseEntity<Resource> download(BinaryContentDto binaryContentDto) {
+    log.debug("바이너리 컨텐츠 다운로드 시도: binaryContentId={}", binaryContentDto.id());
     InputStream is = get(binaryContentDto.id());
     Resource resource = new InputStreamResource(is);
     String encodeFile = UriUtils.encode(binaryContentDto.fileName(), StandardCharsets.UTF_8);
+    log.info("바이너리 컨텐츠 다운로드 성공: binaryContentId={}", binaryContentDto.id());
     return ResponseEntity.ok()
         .header("Content-Disposition", "attachment; filename=\"" + encodeFile + "\"")
         .header("Content-Type", binaryContentDto.contentType())

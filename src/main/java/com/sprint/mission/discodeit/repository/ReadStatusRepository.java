@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
@@ -27,5 +28,7 @@ public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
 
   void deleteByChannelId(UUID channelId);
 
+  @Modifying
+  @Query("delete from ReadStatus r where r.user.id = :userId")
   void deleteByUserId(UUID userId);
 }
