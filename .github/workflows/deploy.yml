@@ -71,7 +71,7 @@ jobs:
             --cluster ${{ vars.ECS_CLUSTER }} \
             --service ${{ vars.ECS_SERVICE }} \
             --desired-count 0 \
-            --deployment-configuration "minimumHealthyPercent=0,maximumPercent=100"
+            --deployment-configuration "minimumHealthyPercent=0"
           
           # 실행 중인 task 종료까지 대기
           if [ -n "$TASK_ARNS" ] && [ "$TASK_ARNS" != "None" ]; then
@@ -89,7 +89,7 @@ jobs:
             --service ${{ vars.ECS_SERVICE }} \
             --task-definition $NEW_TASK_DEFINITION_ARN \
             --desired-count 1 \
-            --deployment-configuration "minimumHealthyPercent=0,maximumPercent=100"
+            --deployment-configuration "minimumHealthyPercent=0"
 
       - name: ECS 배포 완료 대기
         run: |
