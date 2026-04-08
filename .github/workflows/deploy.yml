@@ -63,10 +63,23 @@ jobs:
 
       - name: 기존 ECS 서비스 중단
         run: |
+          # 실행 중인 Task
+          TASK_ARNS=$(aws ecs list-tasks --cluster ${{ vars.ECS_CLUSTER }} --service ${{ vars.ECS_SERVICE }} --query "taskArns" --output text)
+          
+          # 기존 Task 전부 종료
           aws ecs update-service \
             --cluster ${{ vars.ECS_CLUSTER }} \
             --service ${{ vars.ECS_SERVICE }} \
             --desired-count 0
+          
+          # 실행 중인 task 종료까지 대기
+          if [ -n "$TASK_ARNS" ] && [ "$TASK_ARNS" != "None" ]; then
+            echo "Waiting for tasks to stop: $TASK_ARNS"
+            aws ecs wait tasks-stopped --cluster ${{ vars.ECS_CLUSTER }} --tasks $TASK_ARNS
+          fi
+          
+          echo "✅ 모든 기존 Task가 종료되었습니다!!!!!!!!!!"
+
 
       - name: ECS 업데이트
         run: |
@@ -75,3 +88,18 @@ jobs:
             --service ${{ vars.ECS_SERVICE }} \
             --task-definition $NEW_TASK_DEFINITION_ARN \
             --desired-count 1
+
+      - name: ECS 배포 완료 대기
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ vars.ECS_CLUSTER }} \
+            --services ${{ vars.ECS_SERVICE }}
+          
+          echo "✅ 새로운 배포가 완료되었습니다!!!!"
+
+      - name: ECS 배포 상태 확인
+        run: |
+          aws ecs describe-services \
+            --cluster ${{ vars.ECS_CLUSTER }} \
+            --services ${{ vars.ECS_SERVICE }} \
+            --query "services[0].deployments"
