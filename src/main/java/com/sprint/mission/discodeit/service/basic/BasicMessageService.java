@@ -152,9 +152,7 @@ public class BasicMessageService implements MessageService {
 
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
-        .orElseThrow(() -> {
-          return new MessageNotFoundException().addDetail("messageId", messageId);
-        });
+        .orElseThrow(() -> new MessageNotFoundException().addDetail("messageId", messageId));
   }
 
   private void checkAuthor(UUID authorId, UUID userId) {
