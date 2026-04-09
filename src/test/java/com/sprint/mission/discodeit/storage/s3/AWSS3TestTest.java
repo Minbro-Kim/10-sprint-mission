@@ -7,6 +7,7 @@ import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -51,6 +52,8 @@ class AWSS3TestTest {
 
   @Test
   @DisplayName("S3 통합 테스트(e2e): 업로드, URL 생성, 다운로드 확인")
+  @EnabledIfEnvironmentVariable(named = "RUN_S3_CONNECT_TEST", matches = "true")
+//특정 환경에서만 돌리기
   void s3IntegrationTest() {
     //given
     String testKey = "test/hello.txt";
