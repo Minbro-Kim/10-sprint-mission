@@ -66,7 +66,7 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
     violationRules {
         rule {
-            element = 'PACKAGE'//'BUNDLE' //'CLASS'
+            element = 'PACKAGE' // 그 외 범위: 'BUNDLE', 'CLASS' 등
             // 경로
             includes = ['com.sprint.mission.discodeit.service.basic']
             limit {
