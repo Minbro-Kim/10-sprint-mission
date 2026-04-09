@@ -150,11 +150,6 @@ public class BasicUserService implements UserService {
     }
   }
 
-  private UserStatus findUserStatusByUserId(UUID userId) {
-    return userStatusRepository.findByUserId(userId)
-        .orElseThrow(() -> new UserStatusNotFoundException().addDetail("userId", userId));
-  }
-
   private User get(UUID userId) {
     return userRepository.findById(userId)
         .orElseThrow(() -> {
