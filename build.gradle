@@ -46,12 +46,9 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.31.7'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
     systemProperty 'spring.profiles.active', 'test'
-}
-
-test {
     finalizedBy jacocoTestReport
 }
 
