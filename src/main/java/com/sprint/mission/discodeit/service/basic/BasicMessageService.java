@@ -130,7 +130,7 @@ public class BasicMessageService implements MessageService {
 //          .forEach(b -> binaryContentRepository.deleteById(b.getId()));//첨부파일 있는경우만 지우기
 //    }
     messageRepository.deleteById(messageId);
-    log.info("메세지 삭제 성공: messageId={}", message.getId());
+    log.info("메세지 삭제 성공: messageId={}", messageId);
   }
 
   private void checkValidate(MessageCreateRequest dto,
@@ -152,9 +152,7 @@ public class BasicMessageService implements MessageService {
 
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
-        .orElseThrow(() -> {
-          return new MessageNotFoundException().addDetail("messageId", messageId);
-        });
+        .orElseThrow(() -> new MessageNotFoundException().addDetail("messageId", messageId));
   }
 
   private void checkAuthor(UUID authorId, UUID userId) {
