@@ -130,7 +130,7 @@ public class BasicMessageService implements MessageService {
 //          .forEach(b -> binaryContentRepository.deleteById(b.getId()));//첨부파일 있는경우만 지우기
 //    }
     messageRepository.deleteById(messageId);
-    log.info("메세지 삭제 성공: messageId={}", message.getId());
+    log.info("메세지 삭제 성공: messageId={}", messageId);
   }
 
   private void checkValidate(MessageCreateRequest dto,
