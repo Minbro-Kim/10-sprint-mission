@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.storage.s3;
 import java.io.FileInputStream;
 import java.time.Duration;
 import java.util.Properties;
-import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -13,7 +12,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
-@Slf4j
 public class AWSS3Test {
   // S3 연결 확인을 위한 클래스(통합 테스트로 확인)빈 등록X
 
@@ -34,7 +32,6 @@ public class AWSS3Test {
         .build();
 
     s3Client.putObject(putObjectRequest, RequestBody.fromBytes(data));
-    log.info("업로드 성공: key={}", key);
   }
 
   // 다운로드 테스트
@@ -45,7 +42,6 @@ public class AWSS3Test {
         .build();
 
     ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
-    log.info("다운로드 성공: 크기={}", objectBytes.asByteArray().length);
   }
 
   // PresignedUrl 생성
