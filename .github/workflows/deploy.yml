@@ -2,6 +2,9 @@ name: Deploy
 on:
   push:
     branches: [ "release" ]
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
 
 jobs:
   # docker 이미지 빌드 & 푸시
