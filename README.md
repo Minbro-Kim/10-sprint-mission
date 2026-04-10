@@ -1,5 +1,33 @@
 # 🚀 Project Discodeit (Sprint 8)
 
+> **Discodeit**: 채널 기반 실시간 메시징 플랫폼\
+> **Sprint 8 주요 성과**:
+>> AWS S3 통합\
+>> Docker-Compose 환경 표준화\
+>> GitHub Actions & ECS를 이용한 CI/CD 파이프라인 구축\
+
+> 🛠️ Stacks
+<p align="left">
+  <img src="https://img.shields.io/badge/-SpringBoot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white&label="/>
+  <img src="https://img.shields.io/badge/-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white&label="/>
+  <img src="https://img.shields.io/badge/-AmazonS3-569A31?style=for-the-badge&logo=amazons3&logoColor=white&label="/>
+  <img src="https://img.shields.io/badge/-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white&label="/>
+</p>
+
+---
+
+## 📌 목차
+1. [📊 Test Coverage](#-test-coverage)
+2. [🤖 사용 방법](#-사용방법)
+   - [📥 Repository Clone](#-repository-clone)
+   - [💾 AWS S3 설정](#-선택-aws-s3-설정)
+   - [🐳 로컬 실행 (Docker Compose)](#-로컬-실행docker-compose)
+3. [☁️ CI/CD 배포 (AWS ECS on EC2)](#-cicd-배포-aws-ecs-on-ec2)
+   - [🏗️ 인프라 구성](#-인프라-구성)
+   - [👷 배포 전략 (Workflow)](#-배포-전략-workflow)
+
+---
+
 ## 📊 Test Coverage
 
 [![codecov](https://codecov.io/github/Minbro-Kim/10-sprint-mission/branch/sprint8/graph/badge.svg?token=B0WE4JVIIN)](https://codecov.io/github/Minbro-Kim/10-sprint-mission)
@@ -44,7 +72,7 @@
     	  ]
       }
       ```
-    </detils>
+    </details>
 
 #### 🛜 S3 연결 검증
 - `AWSS3TestTest`을 실행하여 S3 업로드/다운로드 테스트
@@ -110,21 +138,21 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
 
 ----
 
-### ☁️ CI/CD 배포 (AWS ECS on EC2)
+## ☁️ CI/CD 배포 (AWS ECS on EC2)
 - GitHub Actions를 사용하여 빌드, 테스트, ECR 푸시 및 ECS 서비스 업데이트를 자동화
 
-#### 🏗️ 인프라 구성
+### 🏗️ 인프라 구성
 - **Compute**: AWS ECS (EC2 Launch Type)
 - **Registry**: AWS ECR Public
 - **Database**: AWS RDS (PostgreSQL)
 - **Storage**: AWS S3 (Static Files)
 - **Network**: Single EC2 Instance (Bridge Mode)
 
-#### 1️⃣ RDS 및 DB 스키마 설정
+### 1️⃣ RDS 및 DB 스키마 설정
 - RDS PostgreSQL 생성
 - 외부 접속 도구(ex.Datagrip)를 사용하여 `resources/schema.sql`의 DDL을 실행하여 테이블을 미리 생성
 
-#### 2️⃣ discodeit.env 환경 변수 설정
+### 2️⃣ discodeit.env 환경 변수 설정
 - S3 Bucket에 업로드
 
   <details>
@@ -153,27 +181,27 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
    ```
   </details>
 
-#### 3️⃣ ECR 설정
+### 3️⃣ ECR 설정
 - Public ECR 생성
 
-#### 4️⃣ ECS 인프라 설정 (Console)
-##### ECS Cluster 생성
+### 4️⃣ ECS 인프라 설정 (Console)
+#### ECS Cluster 생성
 - 인프라 > 원하는 용량:	최소 0, 최대 1
 
-##### ECS Task Definition
+#### ECS Task Definition
 - 인프라 요구 사항 > 시작 유형: EC2
 - 인프라 요구 사항 > 네트워크 모드:	bridge
 - 컨테이너-1 > 컨테이너 세부 정보 > 이미지 URI: ECR 이미지 URI:lastest
 - 컨테이너-1 > 포트 매핑	호스트 포트: 80, 컨테이너 포트: 80
 - 컨테이너-1 > 환경 변수 - 선택 사항 > 파일에서 추가: S3에 업로드한 discodeit.env 파일 지정
 
-##### ECS Service 생성
+#### ECS Service 생성
 - 배포 구성 > 태스크 정의 패밀리: 생성한 Task Definition 선택
 - 배포 구성 > 원하는 태스크	1	기본값
 - EC2 보안그룹: HTTP 모든 요청 허용
 
-#### 5️⃣ Github Actions 파이프라인 구성
-##### 🧑‍🎤 IAM 사용자 생성
+### 5️⃣ Github Actions 파이프라인 구성
+#### 🧑‍🎤 IAM 사용자 생성
 - 파이프라인에서 필요한 최소 권한 정책 부여
 
   <details>
@@ -245,7 +273,7 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
     ```
   </details>
 
-##### 🔑 Github 환경변수 입력
+#### 🔑 Github 환경변수 입력
 - Github > Repo > Settings > Secrets and Variables > Actions
   - Secrets
     - `AWS_ACCESS_KEY`: IAM 사용자의 액세스 키
@@ -258,7 +286,7 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
     - `ECS_TASK_DEFINITION`: ECS 태스크 정의 이름
 
 
-##### 👷 배포 전략 (Workflow)
+#### 👷 배포 전략 (Workflow)
 - test.yml
   - test 코드를 검증하는 파이프라인으로 main에 PR 시, 실행(생략가능)
 - deploy.yml
