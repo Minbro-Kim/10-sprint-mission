@@ -6,13 +6,12 @@
 >> Docker-Compose 환경 표준화\
 >> GitHub Actions & ECS를 이용한 CI/CD 파이프라인 구축\
 
-> 🛠️ Stacks
-<p align="left">
-  <img src="https://img.shields.io/badge/-SpringBoot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white&label="/>
-  <img src="https://img.shields.io/badge/-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white&label="/>
-  <img src="https://img.shields.io/badge/-AmazonS3-569A31?style=for-the-badge&logo=amazons3&logoColor=white&label="/>
-  <img src="https://img.shields.io/badge/-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white&label="/>
-</p>
+### 🛠️ Tech Stacks
+| Category | Tech Stack |
+| :--- | :--- |
+| **Framework** | <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=flat-square&logo=springboot&logoColor=white"/> |
+| **Infrastructure** | <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white"/> <img src="https://img.shields.io/badge/AWS_ECS-FF9900?style=flat-square&logo=amazonecs&logoColor=white"/> <img src="https://img.shields.io/badge/AWS_ECR-FF9900?style=flat-square&logo=amazonecr&logoColor=white"/> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white"/> |
+| **Storage** | <img src="https://img.shields.io/badge/Amazon_S3-569A31?style=flat-square&logo=amazons3&logoColor=white"/> <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"/> |
 
 ---
 
@@ -148,11 +147,11 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
 - **Storage**: AWS S3 (Static Files)
 - **Network**: Single EC2 Instance (Bridge Mode)
 
-### 1️⃣ RDS 및 DB 스키마 설정
+#### 1️⃣ RDS 및 DB 스키마 설정
 - RDS PostgreSQL 생성
 - 외부 접속 도구(ex.Datagrip)를 사용하여 `resources/schema.sql`의 DDL을 실행하여 테이블을 미리 생성
 
-### 2️⃣ discodeit.env 환경 변수 설정
+#### 2️⃣ discodeit.env 환경 변수 설정
 - S3 Bucket에 업로드
 
   <details>
@@ -181,27 +180,27 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
    ```
   </details>
 
-### 3️⃣ ECR 설정
+#### 3️⃣ ECR 설정
 - Public ECR 생성
 
-### 4️⃣ ECS 인프라 설정 (Console)
+#### 4️⃣ ECS 인프라 설정 (Console)
 #### ECS Cluster 생성
 - 인프라 > 원하는 용량:	최소 0, 최대 1
 
-#### ECS Task Definition
+##### ECS Task Definition
 - 인프라 요구 사항 > 시작 유형: EC2
 - 인프라 요구 사항 > 네트워크 모드:	bridge
 - 컨테이너-1 > 컨테이너 세부 정보 > 이미지 URI: ECR 이미지 URI:lastest
 - 컨테이너-1 > 포트 매핑	호스트 포트: 80, 컨테이너 포트: 80
 - 컨테이너-1 > 환경 변수 - 선택 사항 > 파일에서 추가: S3에 업로드한 discodeit.env 파일 지정
 
-#### ECS Service 생성
+##### ECS Service 생성
 - 배포 구성 > 태스크 정의 패밀리: 생성한 Task Definition 선택
 - 배포 구성 > 원하는 태스크	1	기본값
 - EC2 보안그룹: HTTP 모든 요청 허용
 
-### 5️⃣ Github Actions 파이프라인 구성
-#### 🧑‍🎤 IAM 사용자 생성
+#### 5️⃣ Github Actions 파이프라인 구성
+##### 🧑‍🎤 IAM 사용자 생성
 - 파이프라인에서 필요한 최소 권한 정책 부여
 
   <details>
@@ -273,7 +272,7 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
     ```
   </details>
 
-#### 🔑 Github 환경변수 입력
+##### 🔑 Github 환경변수 입력
 - Github > Repo > Settings > Secrets and Variables > Actions
   - Secrets
     - `AWS_ACCESS_KEY`: IAM 사용자의 액세스 키
