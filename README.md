@@ -14,15 +14,15 @@
 | **Storage** | <img src="https://img.shields.io/badge/Amazon_S3-569A31?style=flat-square&logo=amazons3&logoColor=white"/> <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"/> |
 
 ---
-
+  
 ## 📌 목차
 1. [📊 Test Coverage](#-test-coverage)
 2. [🤖 사용 방법](#-사용방법)
    - [📥 Repository Clone](#-repository-clone)
    - [💾 AWS S3 설정](#-선택-aws-s3-설정)
    - [🐳 로컬 실행 (Docker Compose)](#-로컬-실행docker-compose)
-3. [☁️ CI/CD 배포 (AWS ECS on EC2)](#-cicd-배포-aws-ecs-on-ec2)
-   - [🏗️ 인프라 구성](#-인프라-구성)
+3. [☁️ CI/CD 배포 (AWS ECS on EC2)](#️-cicd-배포-aws-ecs-on-ec2)
+   - [🏗️ 인프라 구성](#️-인프라-구성)
    - [👷 배포 전략 (Workflow)](#-배포-전략-workflow)
 
 ---
@@ -136,6 +136,7 @@ RUN_S3_CONNECT_TEST=true ./gradlew test --tests "com.sprint.mission.discodeit.st
   ```
 
 ----
+
 
 ## ☁️ CI/CD 배포 (AWS ECS on EC2)
 - GitHub Actions를 사용하여 빌드, 테스트, ECR 푸시 및 ECS 서비스 업데이트를 자동화
