@@ -116,12 +116,9 @@ public class BasicUserService implements UserService {
       binaryContentStorage.put(profile.getId(), binaryContentCreateDto.get().bytes());
       log.debug("새로운 프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
     }
-    log.info("사용자 수정 성공: userId={}, updatedFields=[username={}, email={}, profile={}, password={}]",
+    log.info("사용자 수정 성공: userId={}, profile={}]",
         userId,
-        dto.username(),
-        dto.email(),
-        profile != null,
-        dto.password() != null
+        profile != null
     );
     return userMapper.toDto(user);
   }
