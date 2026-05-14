@@ -20,6 +20,7 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -41,6 +42,8 @@ public class BasicUserService implements UserService {
   private final BinaryContentMapper binaryContentMapper;
   private final BinaryContentStorage binaryContentStorage;
 
+  private final PasswordEncoder passwordEncoder;
+
   @Override
   public UserDto create(UserCreateRequest dto,
       Optional<BinaryContentCreateDto> binaryContentCreateDto) {
@@ -53,7 +56,7 @@ public class BasicUserService implements UserService {
     if (binaryContentCreateDto.isPresent()) {
       profile = binaryContentMapper.toEntity(binaryContentCreateDto.get());
     }
-    User user = userMapper.toEntity(dto, profile);
+    User user = userMapper.toEntity(dto, passwordEncoder.encode(dto.password()), profile);
     UserStatus userStatus = UserStatus.create(user, Instant.now());
     //모든 공개채널에 대한 읽기 상태 저장
     log.debug("사용자 생성 중: 사용자 저장 시도");
@@ -67,12 +70,9 @@ public class BasicUserService implements UserService {
       binaryContentStorage.put(profile.getId(), binaryContentCreateDto.get().bytes());
       log.debug("프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
     }
-    log.info("사용자 생성 성공: userId={} createdFields=[username={}, email={}, profile={}, password={}]",
+    log.info("사용자 생성 성공: userId={}  hasProfile={}",
         user.getId(),
-        user.getUsername(),
-        user.getEmail(),
-        user.getProfile() != null,
-        user.getPassword() != null
+        user.getProfile() != null
     );
     return userMapper.toDto(user);
   }
@@ -111,12 +111,13 @@ public class BasicUserService implements UserService {
       profile = binaryContentMapper.toEntity(binaryContentCreateDto.get());
       binaryContentRepository.save(profile);//profile id가 필요하기 때문에
     }
-    user.update(dto.username(), dto.email(), dto.password(), profile);
+    user.update(dto.username(), dto.email(),
+        (dto.password() != null ? passwordEncoder.encode(dto.password()) : null), profile);
     if (binaryContentCreateDto.isPresent()) {//위에서 생성하면 업데이트 실패시 스토리지 저장을 되돌릴수 없기 때문
       binaryContentStorage.put(profile.getId(), binaryContentCreateDto.get().bytes());
       log.debug("새로운 프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
     }
-    log.info("사용자 수정 성공: userId={}, profile={}]",
+    log.info("사용자 수정 성공: userId={}, changeProfile={}]",
         userId,
         profile != null
     );

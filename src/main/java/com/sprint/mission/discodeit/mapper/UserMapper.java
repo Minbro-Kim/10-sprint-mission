@@ -17,11 +17,11 @@ public interface UserMapper {
   UserDto toDto(User user);
 
 
-  default User toEntity(UserCreateRequest dto, BinaryContent profile) {
+  default User toEntity(UserCreateRequest dto, String encodedPassword, BinaryContent profile) {
     return User.create(
         dto.username(),
         dto.email(),
-        dto.password(),
+        encodedPassword,
         profile
     );
   }

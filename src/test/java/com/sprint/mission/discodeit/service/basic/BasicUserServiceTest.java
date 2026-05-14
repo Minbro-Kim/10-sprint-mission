@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.inOrder;
@@ -32,15 +33,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 class BasicUserServiceTest {
 
   @Mock
@@ -59,6 +65,8 @@ class BasicUserServiceTest {
   private BinaryContentMapper binaryContentMapper;
   @Mock
   private BinaryContentStorage binaryContentStorage;
+  @Spy
+  private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
   @InjectMocks
   private BasicUserService userService;
@@ -86,7 +94,8 @@ class BasicUserServiceTest {
         new byte[]{1, 3}, 50);
     BinaryContent profile = BinaryContent.create(profileDto.fileName(),
         profileDto.contentType(), profileDto.size());
-    User user = User.create(dto.username(), dto.email(), dto.password(), profile);
+    User user = User.create(dto.username(), dto.email(), passwordEncoder.encode(dto.password()),
+        profile);
     BinaryContentDto binaryContentDto = new BinaryContentDto(UUID.randomUUID(),
         profile.getFileName(), profile.getSize(), profile.getContentType());
     UserDto userDto = new UserDto(UUID.randomUUID(), user.getUsername(), user.getEmail(),
@@ -96,7 +105,8 @@ class BasicUserServiceTest {
     given(userRepository.existsByEmail(dto.email())).willReturn(false);
     given(userRepository.existsByUsername(dto.username())).willReturn(false);
     given(binaryContentMapper.toEntity(profileDto)).willReturn(profile);
-    given(userMapper.toEntity(dto, profile)).willReturn(user);
+    given(userMapper.toEntity(eq(dto), any(), eq(profile))).willReturn(
+        user);
     given(channelRepository.findAllPublic()).willReturn(channels);
     given(userMapper.toDto(any(User.class))).willReturn(userDto);
 
@@ -113,6 +123,7 @@ class BasicUserServiceTest {
     User capturedUser = userCaptor.getValue();
     assertEquals(capturedUser.getUsername(), dto.username());
     assertEquals(capturedUser.getEmail(), dto.email());
+    assertTrue(passwordEncoder.matches(dto.password(), capturedUser.getPassword()));
 
     // 읽기 상태 저장 검증
     ArgumentCaptor<List<ReadStatus>> listCaptor = ArgumentCaptor.forClass(List.class);
@@ -128,14 +139,15 @@ class BasicUserServiceTest {
 
     //given
     UserCreateRequest dto = new UserCreateRequest("user", "email@test.com", "password");
-    User user = User.create(dto.username(), dto.email(), dto.password(), null);
+    User user = User.create(dto.username(), dto.email(), passwordEncoder.encode(dto.password()),
+        null);
     UserDto userDto = new UserDto(UUID.randomUUID(), user.getUsername(), user.getEmail(),
         null, true, Instant.now(), Instant.now());
     List<Channel> channels = List.of(new Channel[]{mock(Channel.class), mock(Channel.class)});
 
     given(userRepository.existsByEmail(dto.email())).willReturn(false);
     given(userRepository.existsByUsername(dto.username())).willReturn(false);
-    given(userMapper.toEntity(dto, null)).willReturn(user);
+    given(userMapper.toEntity(eq(dto), any(), isNull())).willReturn(user);
     given(channelRepository.findAllPublic()).willReturn(channels);
     given(userMapper.toDto(any(User.class))).willReturn(userDto);
 
@@ -152,6 +164,7 @@ class BasicUserServiceTest {
     User capturedUser = userCaptor.getValue();
     assertEquals(capturedUser.getUsername(), dto.username());
     assertEquals(capturedUser.getEmail(), dto.email());
+    assertTrue(passwordEncoder.matches(dto.password(), capturedUser.getPassword()));
 
     // 읽기 상태 저장 검증
     ArgumentCaptor<List<ReadStatus>> listCaptor = ArgumentCaptor.forClass(List.class);
@@ -164,7 +177,8 @@ class BasicUserServiceTest {
   void updateUserSuccess() {
     //given
     UUID userId = UUID.randomUUID();
-    User existingUser = User.create("oldName", "old@test.com", "oldPass", null);
+    User existingUser = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"),
+        null);
     UserUpdateRequest updateDto = new UserUpdateRequest("newName", "new@test.com", "newPass");
     BinaryContentCreateDto binaryContentCreateDto = new BinaryContentCreateDto("fileName", "jpg",
         new byte[]{1, 2}, 50);
@@ -185,18 +199,19 @@ class BasicUserServiceTest {
     //then
     assertNotNull(result);
     assertEquals(updateDto.username(), existingUser.getUsername());
-    assertEquals(updateDto.password(), existingUser.getPassword());
+    assertTrue(passwordEncoder.matches(updateDto.password(), existingUser.getPassword()));
 
     then(binaryContentRepository).should().save(profile);
     then(binaryContentStorage).should().put(any(), eq(binaryContentCreateDto.bytes()));
   }
 
   @Test
-  @DisplayName("성공: 사용자 정보(이름, 이메일, 비밀번호, 프로필) 수정 성공")
+  @DisplayName("성공: 사용자 정보 비밀번호 수정 성공")
   void updateUserPasswordSuccess() {
     //given
     UUID userId = UUID.randomUUID();
-    User existingUser = User.create("oldName", "old@test.com", "oldPass", null);
+    User existingUser = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"),
+        null);
     UserUpdateRequest updateDto = new UserUpdateRequest(null, null, "newPass");
     UserDto userDto = new UserDto(userId, null, null, null, true, Instant.now(),
         Instant.now());
@@ -211,7 +226,33 @@ class BasicUserServiceTest {
     assertNotNull(result);
     assertEquals("oldName", existingUser.getUsername());
     assertEquals("old@test.com", existingUser.getEmail());
-    assertEquals(updateDto.password(), existingUser.getPassword());
+    assertTrue(passwordEncoder.matches(updateDto.password(), existingUser.getPassword()));
+
+  }
+
+  @Test
+  @DisplayName("성공: 사용자 이름만 수정 성공")
+  void updateUserNameOnlySuccess() {
+    //given
+    UUID userId = UUID.randomUUID();
+    User existingUser = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"),
+        null);
+    UserUpdateRequest updateDto = new UserUpdateRequest("newName", null, null);
+    UserDto userDto = new UserDto(userId, updateDto.username(), existingUser.getEmail(), null, true,
+        Instant.now(),
+        Instant.now());
+
+    given(userRepository.findByIdFetchUserInfo(userId)).willReturn(Optional.of(existingUser));
+    given(userMapper.toDto(existingUser)).willReturn(userDto);
+
+    //when
+    UserDto result = userService.update(userId, updateDto, Optional.empty());
+
+    //then
+    assertNotNull(result);
+    assertEquals("newName", existingUser.getUsername());
+    assertEquals("old@test.com", existingUser.getEmail());
+    assertTrue(passwordEncoder.matches("oldPass", existingUser.getPassword()));
 
   }
 
@@ -220,7 +261,8 @@ class BasicUserServiceTest {
   void updateUserFailure() {
     //given
     UUID userId = UUID.randomUUID();
-    User existingUser = User.create("oldName", "old@test.com", "oldPass", null);
+    User existingUser = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"),
+        null);
     UserUpdateRequest updateDto = new UserUpdateRequest("newName", "exist@test.com", "newPass");
     Optional<BinaryContentCreateDto> binaryContentCreateDto = Optional.empty();
 
@@ -237,7 +279,7 @@ class BasicUserServiceTest {
   void deleteUserSuccess() {
     //given
     UUID userId = UUID.randomUUID();
-    User user = User.create("oldName", "old@test.com", "oldPass", null);
+    User user = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"), null);
 
     given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
