@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
@@ -21,6 +22,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -41,7 +43,7 @@ public class SecurityConfig {
             .frameOptions(FrameOptionsConfig::sameOrigin) // 같은 오리진 내 프레임 허용
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/auth/csrf-token", "api/auth/login")
+            .requestMatchers("/api/auth/csrf-token", "api/auth/login", "api/auth/logout")
             .permitAll() // 로그인 및 csrf 토큰 발급 허용
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원 가입 허용
             .requestMatchers("/api/**").authenticated() // 그외 모든 api 요청 인증 필요
