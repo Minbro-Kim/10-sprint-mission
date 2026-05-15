@@ -67,3 +67,8 @@ info:
       max-file-size: ${spring.servlet.multipart.maxFileSize}
       max-request-size: ${spring.servlet.multipart.maxRequestSize}
 
+admin:
+  enable: ${ADMIN_USER_ENABLE:true}
+  email: ${ADMIN_USER_EMAIL:admin@admin.com}
+  username: ${ADMIN_USER_NAME:admin}
+  password: ${ADMIN_USER_PASSWORD:admin123!}
