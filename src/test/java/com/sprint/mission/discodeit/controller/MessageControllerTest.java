@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.message.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.message.MessageDto;
@@ -65,7 +66,8 @@ class MessageControllerTest {
     UUID channelId = UUID.randomUUID();
     UUID messageId = UUID.randomUUID();
     MessageCreateRequest request = new MessageCreateRequest("testContent", channelId, userId);
-    UserDto userDto = new UserDto(userId, "test", "test@test.com", null, true, Instant.now(),
+    UserDto userDto = new UserDto(userId, "test", "test@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
     BinaryContentDto attachmentDto1 = new BinaryContentDto(UUID.randomUUID(), "myImage", 50L,
         "jpg");
@@ -151,7 +153,8 @@ class MessageControllerTest {
     UUID channelId = UUID.randomUUID();
     UUID messageId = UUID.randomUUID();
     MessageUpdateRequest request = new MessageUpdateRequest("newContent");
-    UserDto userDto = new UserDto(userId, "test", "test@test.com", null, true, Instant.now(),
+    UserDto userDto = new UserDto(userId, "test", "test@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
     BinaryContentDto attachmentDto1 = new BinaryContentDto(UUID.randomUUID(), "myImage", 50L,
         "jpg");
@@ -236,9 +239,11 @@ class MessageControllerTest {
     UUID u1Id = UUID.randomUUID();
     UUID u2Id = UUID.randomUUID();
     UUID channelId = UUID.randomUUID();
-    UserDto userDto1 = new UserDto(u1Id, "test1", "test1@test.com", null, true, Instant.now(),
+    UserDto userDto1 = new UserDto(u1Id, "test1", "test1@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
-    UserDto userDto2 = new UserDto(u2Id, "test2", "test2@test.com", null, true, Instant.now(),
+    UserDto userDto2 = new UserDto(u2Id, "test2", "test2@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
     Instant cursor = Instant.now();
     MessageDto messageDto1 = new MessageDto(UUID.randomUUID(), "m1", channelId, userDto1, List.of(),
@@ -269,9 +274,11 @@ class MessageControllerTest {
     UUID u1Id = UUID.randomUUID();
     UUID u2Id = UUID.randomUUID();
     UUID channelId = UUID.randomUUID();
-    UserDto userDto1 = new UserDto(u1Id, "test1", "test1@test.com", null, true, Instant.now(),
+    UserDto userDto1 = new UserDto(u1Id, "test1", "test1@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
-    UserDto userDto2 = new UserDto(u2Id, "test2", "test2@test.com", null, true, Instant.now(),
+    UserDto userDto2 = new UserDto(u2Id, "test2", "test2@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
     Instant cursor = Instant.now();
     MessageDto messageDto1 = new MessageDto(UUID.randomUUID(), "m1", channelId, userDto1, List.of(),

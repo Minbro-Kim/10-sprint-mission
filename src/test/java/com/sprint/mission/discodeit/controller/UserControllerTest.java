@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.times;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -14,13 +15,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.userstatus.UserStatusDto;
 import com.sprint.mission.discodeit.dto.userstatus.UserStatusUpdateDto;
-import com.sprint.mission.discodeit.exception.GlobalExceptionHandler;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.exception.userstatus.UserStatusNotFoundException;
@@ -31,19 +32,24 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(UserController.class)
+//@WebMvcTest(UserController.class)
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({GlobalExceptionHandler.class})
+//@Import({GlobalExceptionHandler.class, SecurityConfig.class, SpaCsrfTokenRequestHandler.class})
+//@ComponentScan(basePackages = "com.sprint.mission.discodeit.auth")
+@SpringBootTest
+@Tag("integration")
 class UserControllerTest {
 
   @Autowired
@@ -65,7 +71,8 @@ class UserControllerTest {
     UUID userId = UUID.randomUUID();
     UserCreateRequest request = new UserCreateRequest("test", "test@test.com", "test123");
     BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "myImage", 50L, "jpg");
-    UserDto userDto = new UserDto(userId, "test", "test@test.com", profiledto, true, Instant.now(),
+    UserDto userDto = new UserDto(userId, "test", "test@test.com", Role.USER, profiledto, true,
+        Instant.now(),
         Instant.now());
 
     // 바디 생성
@@ -90,6 +97,7 @@ class UserControllerTest {
     mockMvc.perform(multipart("/api/users")
             .file(userPart)
             .file(profilePart)
+            .with(csrf())
             .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").exists())
@@ -116,7 +124,8 @@ class UserControllerTest {
 
     //when & then
     mockMvc.perform(multipart("/api/users")
-            .file(userPart))
+            .file(userPart)
+            .with(csrf()))
         .andExpect(status().isConflict())
         .andExpect(
             jsonPath("$.exceptionType").value(EmailAlreadyExistException.class.getSimpleName()));
@@ -129,7 +138,8 @@ class UserControllerTest {
     UUID userId = UUID.randomUUID();
     UserUpdateRequest request = new UserUpdateRequest(null, "new@test.com", null);
     BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "newImage", 50L, "jpg");
-    UserDto userDto = new UserDto(userId, "test", "new@test.com", profiledto, true, Instant.now(),
+    UserDto userDto = new UserDto(userId, "test", "new@test.com", Role.USER, profiledto, true,
+        Instant.now(),
         Instant.now());
 
     // 바디 생성
@@ -173,7 +183,7 @@ class UserControllerTest {
     UUID wrongUserId = UUID.randomUUID();
     UserUpdateRequest request = new UserUpdateRequest(null, "new@test.com", null);
     BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "newImage", 50L, "jpg");
-    UserDto userDto = new UserDto(wrongUserId, "test", "new@test.com", profiledto, true,
+    UserDto userDto = new UserDto(wrongUserId, "test", "new@test.com", Role.USER, profiledto, true,
         Instant.now(),
         Instant.now());
 
@@ -243,11 +253,14 @@ class UserControllerTest {
     UUID userId1 = UUID.randomUUID();
     UUID userId2 = UUID.randomUUID();
     UUID userId3 = UUID.randomUUID();
-    UserDto userDto1 = new UserDto(userId1, "test1", "test1@test.com", null, true, Instant.now(),
+    UserDto userDto1 = new UserDto(userId1, "test1", "test1@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
-    UserDto userDto2 = new UserDto(userId2, "test2", "test2@test.com", null, true, Instant.now(),
+    UserDto userDto2 = new UserDto(userId2, "test2", "test2@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
-    UserDto userDto3 = new UserDto(userId3, "test3", "test3@test.com", null, true, Instant.now(),
+    UserDto userDto3 = new UserDto(userId3, "test3", "test3@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
     List<UserDto> users = List.of(userDto1, userDto2, userDto3);
 

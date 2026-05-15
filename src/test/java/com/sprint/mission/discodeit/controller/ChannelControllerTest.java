@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.dto.channel.ChannelDto;
 import com.sprint.mission.discodeit.dto.channel.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.channel.PublicChannelCreateRequest;
@@ -57,13 +58,16 @@ class ChannelControllerTest {
     PublicChannelCreateRequest dto = new PublicChannelCreateRequest("channelName",
         "channelDescription");
     UUID channelId = UUID.randomUUID();
-    UserDto userDto1 = new UserDto(UUID.randomUUID(), "test1", "test1@test.com", null, true,
+    UserDto userDto1 = new UserDto(UUID.randomUUID(), "test1", "test1@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
-    UserDto userDto2 = new UserDto(UUID.randomUUID(), "test2", "test2@test.com", null, true,
+    UserDto userDto2 = new UserDto(UUID.randomUUID(), "test2", "test2@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
-    UserDto userDto3 = new UserDto(UUID.randomUUID(), "test3", "test3@test.com", null, true,
+    UserDto userDto3 = new UserDto(UUID.randomUUID(), "test3", "test3@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
     List<UserDto> users = List.of(userDto1, userDto2, userDto3);
@@ -95,13 +99,13 @@ class ChannelControllerTest {
     UUID u3Id = UUID.randomUUID();
     UUID channelId = UUID.randomUUID();
     PrivateChannelCreateRequest dto = new PrivateChannelCreateRequest(List.of(u1Id, u2Id, u3Id));
-    UserDto userDto1 = new UserDto(u1Id, "test1", "test1@test.com", null, true,
+    UserDto userDto1 = new UserDto(u1Id, "test1", "test1@test.com", Role.USER, null, true,
         Instant.now(),
         Instant.now());
-    UserDto userDto2 = new UserDto(u2Id, "test2", "test2@test.com", null, true,
+    UserDto userDto2 = new UserDto(u2Id, "test2", "test2@test.com", Role.USER, null, true,
         Instant.now(),
         Instant.now());
-    UserDto userDto3 = new UserDto(u3Id, "test3", "test3@test.com", null, true,
+    UserDto userDto3 = new UserDto(u3Id, "test3", "test3@test.com", Role.USER, null, true,
         Instant.now(),
         Instant.now());
     List<UserDto> participants = List.of(userDto1, userDto2, userDto3);
@@ -153,13 +157,16 @@ class ChannelControllerTest {
     PublicChannelUpdateRequest dto = new PublicChannelUpdateRequest("newChannelName",
         "newChannelDescription");
     UUID channelId = UUID.randomUUID();
-    UserDto userDto1 = new UserDto(UUID.randomUUID(), "test1", "test1@test.com", null, true,
+    UserDto userDto1 = new UserDto(UUID.randomUUID(), "test1", "test1@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
-    UserDto userDto2 = new UserDto(UUID.randomUUID(), "test2", "test2@test.com", null, true,
+    UserDto userDto2 = new UserDto(UUID.randomUUID(), "test2", "test2@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
-    UserDto userDto3 = new UserDto(UUID.randomUUID(), "test3", "test3@test.com", null, true,
+    UserDto userDto3 = new UserDto(UUID.randomUUID(), "test3", "test3@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
     List<UserDto> users = List.of(userDto1, userDto2, userDto3);
@@ -241,13 +248,15 @@ class ChannelControllerTest {
   void findChannelsByUserSuccess() throws Exception {
     //given
     UUID userId = UUID.randomUUID();
-    UserDto userDto1 = new UserDto(userId, "test1", "test1@test.com", null, true,
+    UserDto userDto1 = new UserDto(userId, "test1", "test1@test.com", Role.USER, null, true,
         Instant.now(),
         Instant.now());
-    UserDto userDto2 = new UserDto(UUID.randomUUID(), "test2", "test2@test.com", null, true,
+    UserDto userDto2 = new UserDto(UUID.randomUUID(), "test2", "test2@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
-    UserDto userDto3 = new UserDto(UUID.randomUUID(), "test3", "test3@test.com", null, true,
+    UserDto userDto3 = new UserDto(UUID.randomUUID(), "test3", "test3@test.com", Role.USER, null,
+        true,
         Instant.now(),
         Instant.now());
     ChannelDto channelDto1 = new ChannelDto(UUID.randomUUID(), ChannelType.PUBLIC, "c1",

@@ -9,10 +9,12 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 
+import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
@@ -98,7 +100,7 @@ class BasicUserServiceTest {
         profile);
     BinaryContentDto binaryContentDto = new BinaryContentDto(UUID.randomUUID(),
         profile.getFileName(), profile.getSize(), profile.getContentType());
-    UserDto userDto = new UserDto(UUID.randomUUID(), user.getUsername(), user.getEmail(),
+    UserDto userDto = new UserDto(UUID.randomUUID(), user.getUsername(), user.getEmail(), Role.USER,
         binaryContentDto, true, Instant.now(), Instant.now());
     List<Channel> channels = List.of(new Channel[]{mock(Channel.class), mock(Channel.class)});
 
@@ -141,7 +143,7 @@ class BasicUserServiceTest {
     UserCreateRequest dto = new UserCreateRequest("user", "email@test.com", "password");
     User user = User.create(dto.username(), dto.email(), passwordEncoder.encode(dto.password()),
         null);
-    UserDto userDto = new UserDto(UUID.randomUUID(), user.getUsername(), user.getEmail(),
+    UserDto userDto = new UserDto(UUID.randomUUID(), user.getUsername(), user.getEmail(), Role.USER,
         null, true, Instant.now(), Instant.now());
     List<Channel> channels = List.of(new Channel[]{mock(Channel.class), mock(Channel.class)});
 
@@ -182,7 +184,8 @@ class BasicUserServiceTest {
     UserUpdateRequest updateDto = new UserUpdateRequest("newName", "new@test.com", "newPass");
     BinaryContentCreateDto binaryContentCreateDto = new BinaryContentCreateDto("fileName", "jpg",
         new byte[]{1, 2}, 50);
-    UserDto userDto = new UserDto(userId, "newName", "old@test.com", null, true, Instant.now(),
+    UserDto userDto = new UserDto(userId, "newName", "old@test.com", Role.USER, null, true,
+        Instant.now(),
         Instant.now());
     BinaryContent profile = BinaryContent.create(binaryContentCreateDto.fileName(),
         binaryContentCreateDto.contentType(), binaryContentCreateDto.size());
@@ -213,7 +216,7 @@ class BasicUserServiceTest {
     User existingUser = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"),
         null);
     UserUpdateRequest updateDto = new UserUpdateRequest(null, null, "newPass");
-    UserDto userDto = new UserDto(userId, null, null, null, true, Instant.now(),
+    UserDto userDto = new UserDto(userId, null, null, Role.USER, null, true, Instant.now(),
         Instant.now());
 
     given(userRepository.findByIdFetchUserInfo(userId)).willReturn(Optional.of(existingUser));
@@ -238,7 +241,8 @@ class BasicUserServiceTest {
     User existingUser = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"),
         null);
     UserUpdateRequest updateDto = new UserUpdateRequest("newName", null, null);
-    UserDto userDto = new UserDto(userId, updateDto.username(), existingUser.getEmail(), null, true,
+    UserDto userDto = new UserDto(userId, updateDto.username(), existingUser.getEmail(), Role.USER,
+        null, true,
         Instant.now(),
         Instant.now());
 
@@ -302,6 +306,32 @@ class BasicUserServiceTest {
 
     //when & then
     assertThrows(UserNotFoundException.class, () -> userService.delete(userId));
+  }
+
+  @Test
+  @DisplayName("사용자 권한을 변경한다.")
+  void updateRoleSuccess() {
+
+    UUID userId = UUID.randomUUID();
+    User user = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"), null);
+    UserDto userDto = new UserDto(userId, null, null, Role.CHANNEL_MANAGER, null, true,
+        Instant.now(), Instant.now());
+    UserRoleUpdateRequest request = new UserRoleUpdateRequest(userId, Role.CHANNEL_MANAGER);
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+    given(userMapper.toDto(user)).willReturn(userDto);
+
+    assertEquals(Role.USER, user.getRole());//기본값
+
+    //when
+    UserDto result = userService.updateRole(request);
+    //then
+    assertNotNull(result);
+    assertAll(
+        () -> assertEquals(Role.CHANNEL_MANAGER, user.getRole()),
+        () -> assertEquals(Role.CHANNEL_MANAGER, result.role())
+    );
+
+
   }
 
 }

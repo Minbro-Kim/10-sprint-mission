@@ -123,7 +123,7 @@ public class UserIntegrationTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").exists());
 
-    User user = userRepository.findByUsernameAndPassword(request.username(), request.password())
+    User user = userRepository.findByUsername(request.username())
         .orElseThrow();
     assertTrue(userStatusRepository.findByUserId(user.getId()).isPresent());
     assertEquals(user.getEmail(), request.email());
@@ -179,7 +179,7 @@ public class UserIntegrationTest {
     em.flush();
     em.clear();
 
-    user = userRepository.findByUsernameAndPassword("test", "test123").orElseThrow();
+    user = userRepository.findByUsername("test").orElseThrow();
     UUID userId = user.getId();
     UUID oldProfileId = oldProfile.getId();
 
@@ -282,7 +282,7 @@ public class UserIntegrationTest {
     em.flush();
     em.clear();
 
-    User myuser = userRepository.findByUsernameAndPassword("test", "test123").orElseThrow();
+    User myuser = userRepository.findByUsername("test").orElseThrow();
     UUID userId = myuser.getId();
     UUID profileId = profile.getId();
 

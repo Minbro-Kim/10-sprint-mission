@@ -1,9 +1,12 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -12,12 +15,8 @@ import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.UUID;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.CodePointLength;
-import org.springframework.context.annotation.Profile;
+
 
 @Getter
 @Entity
@@ -36,6 +35,10 @@ public class User extends BaseUpdatableEntity {
   @Size(max = 60)
   @Column(length = 60, nullable = false)
   private String password;
+  
+  @Column(length = 20, nullable = false)
+  @Enumerated(EnumType.STRING)
+  private Role role = Role.USER;
 
   @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST,
       CascadeType.REMOVE}, orphanRemoval = true)
@@ -84,5 +87,9 @@ public class User extends BaseUpdatableEntity {
       this.profile = newProfile;
     }
 
+  }
+
+  public void updateRole(Role role) {
+    this.role = role;
   }
 }

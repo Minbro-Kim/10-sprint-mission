@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -20,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @EnableJpaAuditing
 @ActiveProfiles("test")
+@Tag("unit")
 class UserRepositoryTest {
 
   @Autowired
@@ -37,11 +39,11 @@ class UserRepositoryTest {
   }
 
   @Test
-  @DisplayName("성공: 아이디와 비밀번호로 사용자 정보들의 조인 조회 성공")
-  void findByUsernameAndPasswordSuccess() {
+  @DisplayName("성공: 사용자 이름으로 사용자 정보들의 조인 조회 성공")
+  void findByUsernameSuccess() {
     //@Query("select u from User u join fetch u.userStatus left join fetch u.profile where u.username = :username and u.password =:password")
     //when
-    Optional<User> result = userRepository.findByUsernameAndPassword("test", "test123");
+    Optional<User> result = userRepository.findByUsername("test");
 
     //then
     assertTrue(result.isPresent());
@@ -55,7 +57,7 @@ class UserRepositoryTest {
   @DisplayName("실패: 잘못된 이름으로 사용자 정보 조회 실패")
   void findByWrongUsernameAndPasswordFailure() {
     //when
-    Optional<User> result = userRepository.findByUsernameAndPassword("wrong", "test123");
+    Optional<User> result = userRepository.findByUsername("wrong");
 
     //then
     assertFalse(result.isPresent());

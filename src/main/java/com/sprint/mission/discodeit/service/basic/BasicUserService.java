@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.ReadStatus;
@@ -132,6 +133,15 @@ public class BasicUserService implements UserService {
     readStatusRepository.deleteByUserId(userId);//삭제된 사용자를 공개채널 멤버나 프라이빗 채널 멤버에서 제거(벌크)
     userRepository.deleteById(userId);
     log.info("사용자 삭제 성공: userId={}", userId);
+  }
+
+  @Override
+  public UserDto updateRole(UserRoleUpdateRequest request) {
+    log.debug("사용자 권한 변경: userId={}, newRole={}", request.userId(), request.newRole());
+    User user = get(request.userId());
+    user.updateRole(request.newRole());
+    log.info("사용자 권한 변경 성공: userId={}, newRole={}", request.userId(), request.newRole());
+    return userMapper.toDto(user);
   }
 
   private void validateEmail(String email) {
