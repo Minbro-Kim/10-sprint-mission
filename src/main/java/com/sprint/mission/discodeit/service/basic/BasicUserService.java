@@ -52,9 +52,9 @@ public class BasicUserService implements UserService {
     validateEmail(dto.email());
     validateUsername(dto.username());
     //프로필 사진
-    log.debug("사용자 생성 중: 프로필 사진 생성");
     BinaryContent profile = null;
     if (binaryContentCreateDto.isPresent()) {
+      log.debug("사용자 생성 중: 프로필 사진 생성");
       profile = binaryContentMapper.toEntity(binaryContentCreateDto.get());
     }
     User user = userMapper.toEntity(dto, passwordEncoder.encode(dto.password()), profile);
