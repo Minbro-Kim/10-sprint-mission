@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -146,6 +147,7 @@ public class UserController {
           )
       )
   })
+  @PreAuthorize("#userId==principal.userDto.id")
   @PatchMapping(path = "/{userId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public ResponseEntity<UserDto> updateUser(
       @PathVariable UUID userId,
@@ -186,6 +188,7 @@ public class UserController {
   })
   @ApiResponse(responseCode = "204", description = "User가 성공적으로 삭제됨")
   @DeleteMapping("/{userId}")
+  @PreAuthorize("#userId==principal.userDto.id")
   public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
     userService.delete(userId);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
