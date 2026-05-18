@@ -13,7 +13,6 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNameAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
-import com.sprint.mission.discodeit.exception.userstatus.UserStatusNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
@@ -22,6 +21,10 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.RememberMeAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -107,6 +110,15 @@ public class BasicUserService implements UserService {
     log.debug("사용자 수정 시도: userId={}", userId);
     User user = userRepository.findByIdFetchUserInfo(userId)
         .orElseThrow(() -> new UserNotFoundException().addDetail("userId", userId));
+    if (dto.password() != null && !dto.password().isEmpty()) {
+
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (authentication instanceof RememberMeAuthenticationToken) {
+        // Remember-Me 인증으로 접근 시 재로그인 요구
+        throw new AccessDeniedException("비밀번호를 변경하려면 다시 로그인해 주세요.");
+      }
+    }
+
     if (dto.email() != null && !user.getEmail().equals(dto.email())) { //변경하는 경우만 검증
       validateEmail(dto.email());
     }

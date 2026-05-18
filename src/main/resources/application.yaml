@@ -72,3 +72,9 @@ admin:
   email: ${ADMIN_USER_EMAIL:admin@admin.com}
   username: ${ADMIN_USER_NAME:admin}
   password: ${ADMIN_USER_PASSWORD:admin123!}
+
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: lax

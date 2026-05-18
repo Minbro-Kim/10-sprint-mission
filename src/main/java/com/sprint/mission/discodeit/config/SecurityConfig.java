@@ -2,8 +2,10 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.auth.CustomAccessDeniedHandler;
 import com.sprint.mission.discodeit.auth.CustomAuthenticationEntryPoint;
+import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.auth.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.LoginSuccessHandler;
+import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +25,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
@@ -37,13 +41,15 @@ public class SecurityConfig {
   private final LoginFailureHandler loginFailureHandler;
   private final CustomAuthenticationEntryPoint authenticationEntryPoint;
   private final CustomAccessDeniedHandler accessDeniedHandler;
+  private final DiscodeitUserDetailsService userDetailsService;
+  private final DataSource dataSource;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry)
       throws Exception {
     return http
         .csrf(csrf -> csrf
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) //Set-Cookie 헤더 설정
+            .csrfTokenRepository(cookieCsrfTokenRepository()) //Set-Cookie 헤더 설정
             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())// CSR 방식을 대비한 쿠키 해석 핸들러 커스텀
             .ignoringRequestMatchers("/h2-console/**") // h2 콘솔에 대한 csrf 설정 비활성화
         )
@@ -77,6 +83,11 @@ public class SecurityConfig {
                 .maxSessionsPreventsLogin(false) //기본값 false
                 .sessionRegistry(sessionRegistry)
             ))
+        .rememberMe(remember -> remember
+            .tokenValiditySeconds(7 * 24 * 60 * 60) //7일
+            .key("remember-me-key")
+            .tokenRepository(persistentTokenRepository(dataSource))
+            .userDetailsService(userDetailsService))
         .build();
   }
 
@@ -111,6 +122,23 @@ public class SecurityConfig {
   @Bean
   public HttpSessionEventPublisher httpSessionEventPublisher() {
     return new HttpSessionEventPublisher();
+  }
+
+  @Bean
+  public PersistentTokenRepository persistentTokenRepository(DataSource dataSource) {
+    JdbcTokenRepositoryImpl repo = new JdbcTokenRepositoryImpl();
+    repo.setDataSource(dataSource);
+    return repo;
+  }
+
+  @Bean
+  public CookieCsrfTokenRepository cookieCsrfTokenRepository() {
+    CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+    csrfTokenRepository.setCookieCustomizer(cookie -> cookie
+        .sameSite("Lax")
+        .path("/")
+    );
+    return csrfTokenRepository;
   }
 }
 
