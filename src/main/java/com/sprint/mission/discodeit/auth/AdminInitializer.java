@@ -3,8 +3,11 @@ package com.sprint.mission.discodeit.auth;
 import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -31,6 +35,7 @@ public class AdminInitializer implements CommandLineRunner {
   private String password;
 
   @Override
+  @Transactional
   public void run(String... args) throws Exception {
     if (userRepository.existsByRole(Role.ADMIN)) {
       log.info("✅ 관리자 계정이 존재합니다. 관리자 계정 생성을 건너뜁니다.");
@@ -40,7 +45,9 @@ public class AdminInitializer implements CommandLineRunner {
     UserCreateRequest request = new UserCreateRequest(username, email, password);
 
     try {
-      userService.create(request, profile);
+      UserDto userDto = userService.create(request, profile);
+      User user = userRepository.findById(userDto.id()).orElseThrow();
+      user.updateRole(Role.ADMIN);
       log.info("✅ 관리자 계정이 생성되었습니다. username={}", username);
     } catch (Exception e) {
       log.error("⛔️ 관리자 계정 생성 실패: ", e);
