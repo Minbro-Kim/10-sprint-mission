@@ -15,16 +15,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
   boolean existsByUsername(String username);
 
-  @Query("select u from User u join fetch u.userStatus left join fetch u.profile")
+  @Query("select u from User u left join fetch u.profile")
   List<User> findAllFetchUserInfo();
 
-  @Query("select u from User u join fetch u.userStatus left join fetch u.profile where u.id in :ids")
+  @Query("select u from User u left join fetch u.profile where u.id in :ids")
   List<User> findAllByIdFetchUserInfo(List<UUID> ids);
 
-  @Query("select u from User u join fetch u.userStatus left join fetch u.profile where u.id = :id")
+  @Query("select u from User u left join fetch u.profile where u.id = :id")
   Optional<User> findByIdFetchUserInfo(UUID id);
 
-  @Query("select u from User u join fetch u.userStatus left join fetch u.profile where u.username = :username")
+  @Query("select u from User u left join fetch u.profile where u.username = :username")
   Optional<User> findByUsername(String username);
 
   boolean existsByRole(Role role);

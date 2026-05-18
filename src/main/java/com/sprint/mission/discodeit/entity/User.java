@@ -35,7 +35,7 @@ public class User extends BaseUpdatableEntity {
   @Size(max = 60)
   @Column(length = 60, nullable = false)
   private String password;
-  
+
   @Column(length = 20, nullable = false)
   @Enumerated(EnumType.STRING)
   private Role role = Role.USER;
@@ -45,9 +45,9 @@ public class User extends BaseUpdatableEntity {
   @JoinColumn(name = "profile_id")
   private BinaryContent profile;
 
-  @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST,
-      CascadeType.REMOVE}, orphanRemoval = true)
-  private UserStatus userStatus;
+//  @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST,
+//      CascadeType.REMOVE}, orphanRemoval = true)
+//  private UserStatus userStatus;
 
   public static User create(String username, String email, String password, BinaryContent profile) {
     return new User(username, email, password, profile);
@@ -63,12 +63,12 @@ public class User extends BaseUpdatableEntity {
     this.profile = profile;
   }
 
-  void setUserStatus(UserStatus userStatus) {
-    this.userStatus = userStatus;
-    if (userStatus.getUser() == null || userStatus.getUser() != this) {
-      this.userStatus.setUser(this);
-    }
-  }
+//  void setUserStatus(UserStatus userStatus) {
+//    this.userStatus = userStatus;
+//    if (userStatus.getUser() == null || userStatus.getUser() != this) {
+//      this.userStatus.setUser(this);
+//    }
+//  }
 
   public void update(String newUsername, String newEmail, String newPassword,
       BinaryContent newProfile) {

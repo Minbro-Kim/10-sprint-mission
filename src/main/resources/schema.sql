@@ -32,14 +32,14 @@ CREATE TABLE users
 
 
 
-CREATE TABLE user_statuses
-(
-    id             UUID PRIMARY KEY,
-    user_id        UUID UNIQUE              NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    last_active_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at     TIMESTAMP WITH TIME ZONE NOT NULL,
-    updated_at     TIMESTAMP WITH TIME ZONE
-);
+-- CREATE TABLE user_statuses
+-- (
+--     id             UUID PRIMARY KEY,
+--     user_id        UUID UNIQUE              NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+--     last_active_at TIMESTAMP WITH TIME ZONE NOT NULL,
+--     created_at     TIMESTAMP WITH TIME ZONE NOT NULL,
+--     updated_at     TIMESTAMP WITH TIME ZONE
+-- );
 
 CREATE TABLE channels
 (

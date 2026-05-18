@@ -18,7 +18,7 @@ import org.springframework.data.repository.query.Param;
 public interface MessageRepository extends JpaRepository<Message, UUID> {
 
   @Query("select m from Message m left join fetch m.author left join fetch m.author.profile "
-      + "left join fetch m.author.userStatus where m.channel.id = :channelId "
+      + "where m.channel.id = :channelId "
       + "and (cast(:cursor as timestamp) is null or m.createdAt < :cursor)")
   Slice<Message> findAllByChannelIdFetchUserInfo(UUID channelId, Pageable pageable,
       Instant cursor);//널비교때는 타입 추론 이 안되기 때문에 캐스팅 필요
