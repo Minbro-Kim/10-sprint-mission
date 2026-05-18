@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.service.UserService;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,8 @@ public abstract class ChannelMapper {
   protected ReadStatusRepository readStatusRepository;
   @Autowired
   protected MessageRepository messageRepository;
+  @Autowired
+  protected UserService userService;
 
 
   public ChannelDto toDto(Channel channel) {
@@ -45,7 +48,7 @@ public abstract class ChannelMapper {
         channel.getUpdatedAt(),
         lastMessage == null ? null : lastMessage.getCreatedAt(),//아직 채널에 메세지가 없는 경우 null
         readStatusRepository.findAllByChannelIdFetchUser(channel.getId()).stream()//유저 정보 같이 가져오기
-            .map(s -> userMapper.toDto(s.getUser())).toList()
+            .map(s -> userMapper.toDto(s.getUser(), userService.isOnline(s.getUser()))).toList()
     );
   }
 
@@ -67,7 +70,7 @@ public abstract class ChannelMapper {
         channel.getCreatedAt(),
         channel.getUpdatedAt(),
         lastMessageAt, //아직 채널에 메세지가 없는 경우 null
-        users.stream().map(userMapper::toDto).toList()
+        users.stream().map(user -> userMapper.toDto(user, userService.isOnline(user))).toList()
     );
   }
 

@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
@@ -8,7 +9,7 @@ import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
+//import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNameAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -21,6 +22,10 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
-  private final UserStatusRepository userStatusRepository;
+  //private final UserStatusRepository userStatusRepository;
   private final BinaryContentRepository binaryContentRepository;
   //모든 멤버를 공개채널에 추가하기 위해..
   private final ReadStatusRepository readStatusRepository;
@@ -44,6 +49,8 @@ public class BasicUserService implements UserService {
   private final BinaryContentStorage binaryContentStorage;
 
   private final PasswordEncoder passwordEncoder;
+
+  private final SessionRegistry sessionRegistry;
 
   @Override
   public UserDto create(UserCreateRequest dto,
@@ -58,7 +65,7 @@ public class BasicUserService implements UserService {
       profile = binaryContentMapper.toEntity(binaryContentCreateDto.get());
     }
     User user = userMapper.toEntity(dto, passwordEncoder.encode(dto.password()), profile);
-    UserStatus userStatus = UserStatus.create(user, Instant.now());
+    //UserStatus userStatus = UserStatus.create(user, Instant.now());
     //모든 공개채널에 대한 읽기 상태 저장
     log.debug("사용자 생성 중: 사용자 저장 시도");
     userRepository.save(user);
@@ -75,14 +82,14 @@ public class BasicUserService implements UserService {
         user.getId(),
         user.getProfile() != null
     );
-    return userMapper.toDto(user);
+    return userMapper.toDto(user, isOnline(user));
   }
 
   @Transactional(readOnly = true)
   @Override
   public UserDto find(UUID userId) {
     User user = get(userId);
-    return userMapper.toDto(user);
+    return userMapper.toDto(user, isOnline(user));
   }
 
   @Transactional(readOnly = true)
@@ -90,7 +97,7 @@ public class BasicUserService implements UserService {
   public List<UserDto> findAll() {
     List<User> users = userRepository.findAllFetchUserInfo();
     List<UserDto> response = new ArrayList<>();
-    users.forEach(u -> response.add(userMapper.toDto(u)));
+    users.forEach(u -> response.add(userMapper.toDto(u, isOnline(u))));
     return response;
   }
 
@@ -122,7 +129,7 @@ public class BasicUserService implements UserService {
         userId,
         profile != null
     );
-    return userMapper.toDto(user);
+    return userMapper.toDto(user, isOnline(user));
   }
 
   @Override
@@ -141,7 +148,13 @@ public class BasicUserService implements UserService {
     User user = get(request.userId());
     user.updateRole(request.newRole());
     log.info("사용자 권한 변경 성공: userId={}, newRole={}", request.userId(), request.newRole());
-    return userMapper.toDto(user);
+    UserDto userDto = userMapper.toDto(user, true);
+    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(userDto, user.getPassword());
+    List<SessionInformation> sessionInformations = sessionRegistry.getAllSessions(userDetails,
+        false);
+    log.info("🥹sessionInformations={}", sessionInformations);
+    sessionInformations.forEach(SessionInformation::expireNow);
+    return userMapper.toDto(user, isOnline(user));
   }
 
   private void validateEmail(String email) {
@@ -163,5 +176,13 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> {
           return new UserNotFoundException().addDetail("userId", userId);
         });
+  }
+
+  @Override
+  public boolean isOnline(User user) {
+    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(userMapper.toDto(user, true),
+        user.getPassword());
+    List<SessionInformation> sessionList = sessionRegistry.getAllSessions(userDetails, false);
+    return !sessionList.isEmpty();
   }
 }

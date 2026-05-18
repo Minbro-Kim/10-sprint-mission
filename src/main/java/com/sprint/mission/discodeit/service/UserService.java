@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 
+import com.sprint.mission.discodeit.entity.User;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -26,4 +27,6 @@ public interface UserService {
   void delete(UUID userId);
 
   UserDto updateRole(@Valid UserRoleUpdateRequest userRoleUpdateRequest);
+
+  boolean isOnline(User user);
 }
