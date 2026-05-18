@@ -9,15 +9,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 
 @Configuration
@@ -32,7 +39,8 @@ public class SecurityConfig {
   private final CustomAccessDeniedHandler accessDeniedHandler;
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry)
+      throws Exception {
     return http
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) //Set-Cookie 헤더 설정
@@ -63,12 +71,46 @@ public class SecurityConfig {
             .authenticationEntryPoint(authenticationEntryPoint)
             .accessDeniedHandler(accessDeniedHandler)
         )
+        .sessionManagement(management -> management
+            .sessionConcurrency(concurrency -> concurrency
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(false) //기본값 false
+                .sessionRegistry(sessionRegistry)
+            ))
         .build();
   }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+
+  @Bean
+  public RoleHierarchy roleHierarchy() {
+    RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+    roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_CHANNEL_MANAGER\n" +
+        "ROLE_CHANNEL_MANAGER > ROLE_USER");
+    return roleHierarchy;
+  }
+
+  // 먼저 로드 되야해서 static 필수
+  @Bean
+  static MethodSecurityExpressionHandler methodSecurityExpressionHandler(
+      RoleHierarchy roleHierarchy) {
+    DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+    handler.setRoleHierarchy(roleHierarchy);
+    return handler;
+  }
+
+  @Bean
+  public SessionRegistry sessionRegistry() {
+    return new SessionRegistryImpl();
+  }
+
+  @Bean
+  public HttpSessionEventPublisher httpSessionEventPublisher() {
+    return new HttpSessionEventPublisher();
   }
 }
 
