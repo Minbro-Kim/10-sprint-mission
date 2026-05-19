@@ -50,9 +50,7 @@ public class BasicUserService implements UserService {
   private final UserMapper userMapper;
   private final BinaryContentMapper binaryContentMapper;
   private final BinaryContentStorage binaryContentStorage;
-
   private final PasswordEncoder passwordEncoder;
-
   private final SessionRegistry sessionRegistry;
 
   @Override
@@ -154,20 +152,7 @@ public class BasicUserService implements UserService {
     log.info("사용자 삭제 성공: userId={}", userId);
   }
 
-  @Override
-  public UserDto updateRole(UserRoleUpdateRequest request) {
-    log.debug("사용자 권한 변경: userId={}, newRole={}", request.userId(), request.newRole());
-    User user = get(request.userId());
-    user.updateRole(request.newRole());
-    log.info("사용자 권한 변경 성공: userId={}, newRole={}", request.userId(), request.newRole());
-    UserDto userDto = userMapper.toDto(user, true);
-    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(userDto, user.getPassword());
-    List<SessionInformation> sessionInformations = sessionRegistry.getAllSessions(userDetails,
-        false);
-    log.info("🥹sessionInformations={}", sessionInformations);
-    sessionInformations.forEach(SessionInformation::expireNow);
-    return userMapper.toDto(user, isOnline(user));
-  }
+
 
   private void validateEmail(String email) {
     log.debug("이메일 유효성 검사: email={}", email);

@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
+import com.sprint.mission.discodeit.service.AuthService;
 import com.sprint.mission.discodeit.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Auth", description = "인증 API")
 public class AuthController {
 
+  private final AuthService authService;
   private final UserService userService;
 
   @GetMapping("/csrf-token")
@@ -34,7 +36,7 @@ public class AuthController {
   @GetMapping("/me")
   public ResponseEntity<UserDto> getCurrentUser(
       @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
-    //return ResponseEntity.ok(userDetails.getUserDto());
+    //return ResponseEntity.ok(userDetails.getUserDto());는 기존 세션의 값을 가져오기때문에 직접 조회
     UserDto dto = userService.find(userDetails.getUserDto().id());
     return ResponseEntity.ok(dto);
   }
@@ -43,7 +45,7 @@ public class AuthController {
   @PutMapping("/role")
   public ResponseEntity<UserDto> updateUserRole(
       @Valid @RequestBody UserRoleUpdateRequest userRoleUpdateRequest) {
-    UserDto userDto = userService.updateRole(userRoleUpdateRequest);
+    UserDto userDto = authService.updateRole(userRoleUpdateRequest);
     return ResponseEntity.ok(userDto);
   }
 

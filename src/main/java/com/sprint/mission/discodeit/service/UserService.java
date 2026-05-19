@@ -26,7 +26,5 @@ public interface UserService {
 
   void delete(UUID userId);
 
-  UserDto updateRole(@Valid UserRoleUpdateRequest userRoleUpdateRequest);
-
   boolean isOnline(User user);
 }
