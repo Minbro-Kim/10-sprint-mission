@@ -8,7 +8,6 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +32,10 @@ public class AdminInitializer implements CommandLineRunner {
   private String username;
   @Value("${admin.password:admin1234!}")
   private String password;
+  @Value("${admin.profile.byte:#{null}}")
+  private String profileByte;
+  @Value("${admin.profile.type:jpeg}")
+  private String contentType;
 
   @Override
   @Transactional
@@ -43,6 +46,25 @@ public class AdminInitializer implements CommandLineRunner {
     }
     Optional<BinaryContentCreateDto> profile = Optional.empty();
     UserCreateRequest request = new UserCreateRequest(username, email, password);
+
+    if (profileByte != null && !profileByte.isEmpty()) {
+      String base64Text = profileByte.trim();
+
+      try {
+        byte[] decodedBytes = java.util.Base64.getDecoder().decode(base64Text);
+
+        BinaryContentCreateDto binaryDto = new BinaryContentCreateDto(
+            "admin-profile." + contentType,
+            "image/" + contentType,
+            decodedBytes,
+            (long) decodedBytes.length
+        );
+        profile = Optional.of(binaryDto);
+      } catch (IllegalArgumentException e) {
+        // 만약 디코딩에 실패한다면(Base64 형식이 아니라면) 그대로 사용하거나 에러 처리
+        log.error("⛔️ 어드민 프로필 디코딩 실패");
+      }
+    }
 
     try {
       UserDto userDto = userService.create(request, profile);
