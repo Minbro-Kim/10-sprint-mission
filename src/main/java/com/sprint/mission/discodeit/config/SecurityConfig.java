@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.config;
 import com.sprint.mission.discodeit.auth.CustomAccessDeniedHandler;
 import com.sprint.mission.discodeit.auth.CustomAuthenticationEntryPoint;
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
+import com.sprint.mission.discodeit.auth.CustomPermissionEvaluator;
 import com.sprint.mission.discodeit.auth.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.LoginSuccessHandler;
 import javax.sql.DataSource;
@@ -43,6 +44,7 @@ public class SecurityConfig {
   private final CustomAccessDeniedHandler accessDeniedHandler;
   private final DiscodeitUserDetailsService userDetailsService;
   private final DataSource dataSource;
+  private final CustomPermissionEvaluator permissionEvaluator;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry)
@@ -108,9 +110,10 @@ public class SecurityConfig {
   // 먼저 로드 되야해서 static 필수
   @Bean
   static MethodSecurityExpressionHandler methodSecurityExpressionHandler(
-      RoleHierarchy roleHierarchy) {
+      RoleHierarchy roleHierarchy, CustomPermissionEvaluator permissionEvaluator) {
     DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
     handler.setRoleHierarchy(roleHierarchy);
+    handler.setPermissionEvaluator(permissionEvaluator);
     return handler;
   }
 
