@@ -22,12 +22,17 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices.RememberMeTokenAlgorithm;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
@@ -86,10 +91,7 @@ public class SecurityConfig {
                 .sessionRegistry(sessionRegistry)
             ))
         .rememberMe(remember -> remember
-            .tokenValiditySeconds(7 * 24 * 60 * 60) //7일
-            .key("remember-me-key")
-            .tokenRepository(persistentTokenRepository(dataSource))
-            .userDetailsService(userDetailsService))
+            .rememberMeServices(rememberMeServices(userDetailsService)))
         .build();
   }
 
@@ -142,6 +144,26 @@ public class SecurityConfig {
         .path("/")
     );
     return csrfTokenRepository;
+  }
+
+  @Bean
+  public RememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
+    //db 기반 저장
+    PersistentTokenBasedRememberMeServices rememberMeServices =
+        new PersistentTokenBasedRememberMeServices(
+            "remember-me-key",
+            userDetailsService,
+            persistentTokenRepository(dataSource)
+        );
+
+    rememberMeServices.setTokenValiditySeconds(7 * 24 * 60 * 60);
+    rememberMeServices.setParameter("remember-me");
+    // samesite 설정
+    rememberMeServices.setCookieCustomizer(cookie -> {
+      cookie.setAttribute("SameSite", "Lax");
+    });
+    
+    return rememberMeServices;
   }
 }
 
