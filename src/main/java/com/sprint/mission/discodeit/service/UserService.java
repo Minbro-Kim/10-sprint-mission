@@ -26,5 +26,4 @@ public interface UserService {
 
   void delete(UUID userId);
 
-  boolean isOnline(User user);
 }

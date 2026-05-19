@@ -21,6 +21,7 @@ import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.MessageService;
 
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,7 @@ public class BasicMessageService implements MessageService {
   private final ReadStatusRepository readStatusRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final PageResponseMapper pageResponseMapper;
+  private final UserSessionManager userSessionManager;
 
   @Override
   public MessageDto create(MessageCreateRequest dto,
@@ -78,14 +80,14 @@ public class BasicMessageService implements MessageService {
     }
     log.info("메세지 생성 성공: channelId={}, authorId={}, messageId={}", channel.getId(), user.getId(),
         message.getId());
-    return messageMapper.toDto(message);
+    return messageMapper.toDto(message, getOnlineUserIds());
   }
 
   @Override
   @Transactional(readOnly = true)
   public MessageDto find(UUID messageId) {
     Message message = get(messageId);
-    return messageMapper.toDto(message);
+    return messageMapper.toDto(message, getOnlineUserIds());
   }
 
   @Override
@@ -97,8 +99,9 @@ public class BasicMessageService implements MessageService {
 //        .map(messageMapper::toDto).toList();
     Slice<Message> slice = messageRepository.findAllByChannelIdFetchUserInfo(channelId, pageable,
         cursor);
+    Set<UUID> onlineUserIds = getOnlineUserIds();
     Slice<MessageDto> sliceDto = slice.map(
-        s -> messageMapper.toDto(s, s.getAttachments()));
+        s -> messageMapper.toDto(s, s.getAttachments(), onlineUserIds));
     Instant nextCursor = null;
     if (slice.hasNext() && slice.hasContent()) {
       nextCursor = slice.getContent().get(slice.getContent().size() - 1).getCreatedAt();
@@ -114,7 +117,7 @@ public class BasicMessageService implements MessageService {
     Message message = get(id);
     message.update(dto.newContent(), null);//첨부파일 변경을 하려면 별도로 메서드 필요
     log.info("메세지 수정 성공:  messageId={}", message.getId());
-    return messageMapper.toDto(message);
+    return messageMapper.toDto(message, getOnlineUserIds());
   }
 
   @Override
@@ -146,5 +149,9 @@ public class BasicMessageService implements MessageService {
   private Message get(UUID messageId) {
     return messageRepository.findById(messageId)
         .orElseThrow(() -> new MessageNotFoundException().addDetail("messageId", messageId));
+  }
+
+  private Set<UUID> getOnlineUserIds() {
+    return userSessionManager.getOnlineUserIds();
   }
 }

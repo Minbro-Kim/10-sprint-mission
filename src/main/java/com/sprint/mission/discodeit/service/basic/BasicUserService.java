@@ -1,15 +1,12 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
-import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-//import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNameAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -18,6 +15,7 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +23,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +45,7 @@ public class BasicUserService implements UserService {
   private final BinaryContentMapper binaryContentMapper;
   private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
-  private final SessionRegistry sessionRegistry;
+  private final UserSessionManager userSessionManager;
 
   @Override
   public UserDto create(UserCreateRequest dto,
@@ -83,14 +77,14 @@ public class BasicUserService implements UserService {
         user.getId(),
         user.getProfile() != null
     );
-    return userMapper.toDto(user, isOnline(user));
+    return userMapper.toDto(user, userSessionManager.isOnline(user));
   }
 
   @Transactional(readOnly = true)
   @Override
   public UserDto find(UUID userId) {
     User user = get(userId);
-    return userMapper.toDto(user, isOnline(user));
+    return userMapper.toDto(user, userSessionManager.isOnline(user));
   }
 
   @Transactional(readOnly = true)
@@ -98,7 +92,8 @@ public class BasicUserService implements UserService {
   public List<UserDto> findAll() {
     List<User> users = userRepository.findAllFetchUserInfo();
     List<UserDto> response = new ArrayList<>();
-    users.forEach(u -> response.add(userMapper.toDto(u, isOnline(u))));
+    Set<UUID> onlineUserIds = userSessionManager.getOnlineUserIds();
+    users.forEach(u -> response.add(userMapper.toDto(u, onlineUserIds.contains(u.getId()))));
     return response;
   }
 
@@ -139,7 +134,7 @@ public class BasicUserService implements UserService {
         userId,
         profile != null
     );
-    return userMapper.toDto(user, isOnline(user));
+    return userMapper.toDto(user, userSessionManager.isOnline(user));
   }
 
   @Override
@@ -151,7 +146,6 @@ public class BasicUserService implements UserService {
     userRepository.deleteById(userId);
     log.info("사용자 삭제 성공: userId={}", userId);
   }
-
 
 
   private void validateEmail(String email) {
@@ -175,11 +169,4 @@ public class BasicUserService implements UserService {
         });
   }
 
-  @Override
-  public boolean isOnline(User user) {
-    DiscodeitUserDetails userDetails = new DiscodeitUserDetails(userMapper.toDto(user, true),
-        user.getPassword());
-    List<SessionInformation> sessionList = sessionRegistry.getAllSessions(userDetails, false);
-    return !sessionList.isEmpty();
-  }
 }
