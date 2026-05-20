@@ -14,7 +14,6 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentCreateDto;
 import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
-import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
@@ -28,8 +27,8 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -54,8 +53,6 @@ class BasicUserServiceTest {
   @Mock
   private UserRepository userRepository;
   @Mock
-  private UserStatusRepository userStatusRepository;
-  @Mock
   private BinaryContentRepository binaryContentRepository;
   @Mock
   private ReadStatusRepository readStatusRepository;
@@ -69,10 +66,11 @@ class BasicUserServiceTest {
   private BinaryContentStorage binaryContentStorage;
   @Spy
   private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+  @Mock
+  private UserSessionManager userSessionManager;
 
   @InjectMocks
   private BasicUserService userService;
-
 
   @Test
   @DisplayName("실패: 중복된 사용자 이메일에 대해 사용자 생성 실패")
@@ -110,7 +108,8 @@ class BasicUserServiceTest {
     given(userMapper.toEntity(eq(dto), any(), eq(profile))).willReturn(
         user);
     given(channelRepository.findAllPublic()).willReturn(channels);
-    given(userMapper.toDto(any(User.class))).willReturn(userDto);
+    given(userSessionManager.isOnline(user)).willReturn(true);
+    given(userMapper.toDto(any(User.class), any(boolean.class))).willReturn(userDto);
 
     //when
     UserDto result = userService.create(dto, Optional.of(profileDto));
@@ -151,7 +150,8 @@ class BasicUserServiceTest {
     given(userRepository.existsByUsername(dto.username())).willReturn(false);
     given(userMapper.toEntity(eq(dto), any(), isNull())).willReturn(user);
     given(channelRepository.findAllPublic()).willReturn(channels);
-    given(userMapper.toDto(any(User.class))).willReturn(userDto);
+    given(userSessionManager.isOnline(user)).willReturn(true);
+    given(userMapper.toDto(any(User.class), any(boolean.class))).willReturn(userDto);
 
     //when
     UserDto result = userService.create(dto, Optional.empty());
@@ -193,7 +193,8 @@ class BasicUserServiceTest {
     given(userRepository.findByIdFetchUserInfo(userId)).willReturn(Optional.of(existingUser));
     given(userRepository.existsByUsername(updateDto.username())).willReturn(false);
     given(userRepository.existsByEmail(updateDto.email())).willReturn(false);
-    given(userMapper.toDto(existingUser)).willReturn(userDto);
+    given(userSessionManager.isOnline(existingUser)).willReturn(true);
+    given(userMapper.toDto(eq(existingUser), any(boolean.class))).willReturn(userDto);
     given(binaryContentMapper.toEntity(binaryContentCreateDto)).willReturn(profile);
 
     //when
@@ -220,7 +221,8 @@ class BasicUserServiceTest {
         Instant.now());
 
     given(userRepository.findByIdFetchUserInfo(userId)).willReturn(Optional.of(existingUser));
-    given(userMapper.toDto(existingUser)).willReturn(userDto);
+    given(userSessionManager.isOnline(existingUser)).willReturn(true);
+    given(userMapper.toDto(eq(existingUser), any(boolean.class))).willReturn(userDto);
 
     //when
     UserDto result = userService.update(userId, updateDto, Optional.empty());
@@ -247,7 +249,8 @@ class BasicUserServiceTest {
         Instant.now());
 
     given(userRepository.findByIdFetchUserInfo(userId)).willReturn(Optional.of(existingUser));
-    given(userMapper.toDto(existingUser)).willReturn(userDto);
+    given(userSessionManager.isOnline(existingUser)).willReturn(true);
+    given(userMapper.toDto(eq(existingUser), any(boolean.class))).willReturn(userDto);
 
     //when
     UserDto result = userService.update(userId, updateDto, Optional.empty());
@@ -306,32 +309,6 @@ class BasicUserServiceTest {
 
     //when & then
     assertThrows(UserNotFoundException.class, () -> userService.delete(userId));
-  }
-
-  @Test
-  @DisplayName("사용자 권한을 변경한다.")
-  void updateRoleSuccess() {
-
-    UUID userId = UUID.randomUUID();
-    User user = User.create("oldName", "old@test.com", passwordEncoder.encode("oldPass"), null);
-    UserDto userDto = new UserDto(userId, null, null, Role.CHANNEL_MANAGER, null, true,
-        Instant.now(), Instant.now());
-    UserRoleUpdateRequest request = new UserRoleUpdateRequest(userId, Role.CHANNEL_MANAGER);
-    given(userRepository.findById(userId)).willReturn(Optional.of(user));
-    given(userMapper.toDto(user)).willReturn(userDto);
-
-    assertEquals(Role.USER, user.getRole());//기본값
-
-    //when
-    UserDto result = userService.updateRole(request);
-    //then
-    assertNotNull(result);
-    assertAll(
-        () -> assertEquals(Role.CHANNEL_MANAGER, user.getRole()),
-        () -> assertEquals(Role.CHANNEL_MANAGER, result.role())
-    );
-
-
   }
 
 }

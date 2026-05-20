@@ -23,7 +23,6 @@ public class BasicAuthService implements AuthService {
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;
-  private final SessionRegistry sessionRegistry;
   private final UserSessionManager userSessionManager;
 
   @Override

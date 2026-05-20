@@ -8,7 +8,6 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -66,9 +64,7 @@ class MessageRepositoryTest {
     userRepository.deleteAll();
     BinaryContent profile1 = BinaryContent.create("profile1", "jpg", 50);
     User user1 = User.create("test", "test@test.com", "test123", profile1);
-    UserStatus.create(user1, Instant.now());
     User user2 = User.create("test2", "test2@test.com", "test123", null);
-    UserStatus.create(user2, Instant.now());
     userRepository.saveAll(List.of(user1, user2));
     u1Id = user1.getId();
     u2Id = user2.getId();
@@ -128,8 +124,6 @@ class MessageRepositoryTest {
     Message firstMessage = result.getContent().get(0);
     assertTrue(org.hibernate.Hibernate.isInitialized(firstMessage.getAuthor()),
         "Author가 로딩");
-    assertTrue(org.hibernate.Hibernate.isInitialized(firstMessage.getAuthor().getUserStatus()),
-        "UserStatus까지 로딩");
   }
 
   @Test
