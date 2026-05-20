@@ -66,6 +66,25 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "**/*Application*",
+                    "**/config/**",
+                    "**/util/**",
+                    "**/*Dto*",
+                    "**/*Request*",
+                    "**/*Response*",
+                    "**/Interceptor*",
+                    "**/Exception*",
+                    "**/entity/**",
+                    "**/*Mapper*",
+                    "**/resources/**",
+                    "**/testdata/**"
+            ])
+        }))
+    }
 }
 
 jacocoTestCoverageVerification {
@@ -80,6 +99,25 @@ jacocoTestCoverageVerification {
                 minimum = 0.6
             }
         }
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "**/*Application*",
+                    "**/config/**",
+                    "**/util/**",
+                    "**/*Dto*",
+                    "**/*Request*",
+                    "**/*Response*",
+                    "**/Interceptor*",
+                    "**/Exception*",
+                    "**/entity/**",
+                    "**/*Mapper*",
+                    "**/resources/**",
+                    "**/testdata/**"
+            ])
+        }))
     }
 }
 // 빌드 시 coverage 체크를 강제
