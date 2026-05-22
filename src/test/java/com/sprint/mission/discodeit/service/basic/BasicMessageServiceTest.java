@@ -229,7 +229,8 @@ class BasicMessageServiceTest {
     MessageUpdateRequest updateDto = new MessageUpdateRequest("New Content");
     Set<UUID> onlineUsers = new HashSet<>(Set.of(UUID.randomUUID(), UUID.randomUUID()));
 
-    given(messageRepository.findById(messageId)).willReturn(Optional.of(message));
+    given(messageRepository.findByIdFetchAttachmentAndUser(messageId)).willReturn(
+        Optional.of(message));
     given(userSessionManager.getOnlineUserIds()).willReturn(onlineUsers);
     given(messageMapper.toDto(message, onlineUsers)).willReturn(
         mock(MessageDto.class));
@@ -249,7 +250,7 @@ class BasicMessageServiceTest {
     UUID messageId = UUID.randomUUID();
     MessageUpdateRequest updateDto = new MessageUpdateRequest("New Content");
 
-    given(messageRepository.findById(messageId)).willReturn(Optional.empty());
+    given(messageRepository.findByIdFetchAttachmentAndUser(messageId)).willReturn(Optional.empty());
 
     //when & then
     assertThrows(MessageNotFoundException.class, () ->
