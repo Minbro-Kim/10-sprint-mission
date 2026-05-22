@@ -114,7 +114,8 @@ public class BasicMessageService implements MessageService {
   @PostAuthorize("returnObject.author().id() == principal.userDto.id")
   public MessageDto update(UUID id, MessageUpdateRequest dto) {
     log.debug("메세지 수정 시도: messageId={}", id);
-    Message message = get(id);
+    Message message = messageRepository.findByIdFetchAttachmentAndUser(id)
+        .orElseThrow(() -> new MessageNotFoundException().addDetail("messageId", id));
     message.update(dto.newContent(), null);//첨부파일 변경을 하려면 별도로 메서드 필요
     log.info("메세지 수정 성공:  messageId={}", message.getId());
     return messageMapper.toDto(message, getOnlineUserIds());

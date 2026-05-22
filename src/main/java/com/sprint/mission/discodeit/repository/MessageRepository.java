@@ -30,6 +30,9 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
       nativeQuery = true)
   Optional<Message> findLastMessageByChannelId(@Param("channelId") UUID channelId);
 
+  @Query("select m from Message m join fetch m.author u left join fetch u.profile left join fetch m.attachments where m.id = :id")
+  Optional<Message> findByIdFetchAttachmentAndUser(UUID id);
+
   //채널아이디목록에 대한 모든 마지막 메세지를 조회 -> 인터페이스를 정의해서 반환 자동 매핑
   //별칭 지정 안하면 인터페이스 함수랑 get 뒤에 이름이 같아야함
 //  @Query(value = "SELECT channel_id, Max(created_at) AS maxCreatedAt FROM messages "
