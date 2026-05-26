@@ -35,7 +35,7 @@ public class JwtTokenProvider {
   @Value("${jwt.refresh-token-validity-seconds}")
   private int REFRESH_TOKEN_VALIDITY_SECONDS;
 
-  public static String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
+  public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
 
   public String generateAccessToken(String subject, AccessTokenClaims claims) {
     Date expirationDate = new Date(
@@ -107,8 +107,7 @@ public class JwtTokenProvider {
     refreshTokenCookie.setMaxAge(maxAge);
     return refreshTokenCookie;
   }
-
-
+  
   private JWTClaimsSet getClaimsFromToken(String token) {
     try {
       SignedJWT signedJWT = SignedJWT.parse(token);
