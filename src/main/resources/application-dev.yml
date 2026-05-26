@@ -30,3 +30,6 @@ logging:
 
 server:
   port: 8080
+
+jwt:
+  secreteKey: ${JWT_SECRETE_KEY:thisisjwtsecretekeyfordiscodeitservice}
