@@ -34,10 +34,14 @@ public class JwtLogoutHandler implements LogoutHandler {
           .ifPresent(c -> {
             log.debug("로그아웃 요청에서 리프레시 토큰 확인");
             String refreshToken = c.getValue();
-            try {//리프레시 토큰의 유효성과 무관하게 전부 삭제(탈취되면 -> 탈취되었으니까 삭제)
-              UUID userId = UUID.fromString(jwtTokenProvider.getSubjectFromToken(refreshToken));
-              jwtRegistry.invalidateJwtInformationByUserId(userId);
-              log.debug("레지스트리에서 사용자 관련 메모리 삭제: userId={}", userId);
+            try {
+              if (jwtTokenProvider.validateToken(refreshToken)
+                  && jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
+                UUID userId = UUID.fromString(jwtTokenProvider.getSubjectFromToken(refreshToken));
+                jwtRegistry.invalidateJwtInformationByUserId(userId);
+                log.debug("레지스트리에서 사용자 관련 메모리 삭제: userId={}", userId);
+              }
+              log.debug("유효하지 않은 리프레시 토큰");
             } catch (Exception e) {
               log.warn("로그아웃 요청 토큰에서 사용자 아이디를 파싱할 수 없음");
             }
