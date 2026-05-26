@@ -4,6 +4,9 @@ import com.sprint.mission.discodeit.auth.CustomAccessDeniedHandler;
 import com.sprint.mission.discodeit.auth.CustomAuthenticationEntryPoint;
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.auth.CustomPermissionEvaluator;
+import com.sprint.mission.discodeit.auth.JwtAuthenticationFilter;
+import com.sprint.mission.discodeit.auth.JwtLoginSuccessHandler;
+import com.sprint.mission.discodeit.auth.JwtLogoutHandler;
 import com.sprint.mission.discodeit.auth.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.LoginSuccessHandler;
 import javax.sql.DataSource;
@@ -20,13 +23,16 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
@@ -41,13 +47,16 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final LoginSuccessHandler loginSuccessHandler;
+  //private final LoginSuccessHandler loginSuccessHandler;
   private final LoginFailureHandler loginFailureHandler;
   private final CustomAuthenticationEntryPoint authenticationEntryPoint;
   private final CustomAccessDeniedHandler accessDeniedHandler;
-  private final DiscodeitUserDetailsService userDetailsService;
+  //private final DiscodeitUserDetailsService userDetailsService;
   private final DataSource dataSource;
   private final CustomPermissionEvaluator permissionEvaluator;
+  private final JwtLoginSuccessHandler loginSuccessHandler;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtLogoutHandler jwtLogoutHandler;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry)
@@ -62,7 +71,8 @@ public class SecurityConfig {
             .frameOptions(FrameOptionsConfig::sameOrigin) // 같은 오리진 내 프레임 허용
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/auth/csrf-token", "api/auth/login", "api/auth/logout")
+            .requestMatchers("/api/auth/csrf-token", "/api/auth/login", "/api/auth/logout",
+                "/api/auth/refresh")
             .permitAll() // 로그인 및 csrf 토큰 발급 허용
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // 회원 가입 허용
             .requestMatchers("/api/**").authenticated() // 그외 모든 api 요청 인증 필요
@@ -75,6 +85,7 @@ public class SecurityConfig {
         )
         .logout(logout -> logout
             .logoutUrl("/api/auth/logout")
+            .addLogoutHandler(jwtLogoutHandler)
             .logoutSuccessHandler(
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
@@ -83,13 +94,16 @@ public class SecurityConfig {
             .accessDeniedHandler(accessDeniedHandler)
         )
         .sessionManagement(management -> management
-            .sessionConcurrency(concurrency -> concurrency
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false) //기본값 false
-                .sessionRegistry(sessionRegistry)
-            ))
-        .rememberMe(remember -> remember
-            .rememberMeServices(rememberMeServices(userDetailsService)))
+//            .sessionConcurrency(concurrency -> concurrency
+//                .maximumSessions(1)
+//                .maxSessionsPreventsLogin(false) //기본값 false
+//                .sessionRegistry(sessionRegistry)
+//            )
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+//        .rememberMe(remember -> remember
+//            .rememberMeServices(rememberMeServices(userDetailsService)))
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .build();
   }
 
