@@ -10,6 +10,7 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.sprint.mission.discodeit.auth.jwt.dto.AccessTokenClaims;
+import jakarta.servlet.http.Cookie;
 import java.text.ParseException;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
@@ -93,6 +94,20 @@ public class JwtTokenProvider {
     JWTClaimsSet claimsSet = getClaimsFromToken(token);
     return claimsSet.getSubject();
   }
+
+  public Cookie getRefreshTokenCookie(String refreshToken) {
+    return getRefreshTokenCookie(refreshToken, REFRESH_TOKEN_VALIDITY_SECONDS);
+  }
+
+  public Cookie getRefreshTokenCookie(String refreshToken, int maxAge) {
+    Cookie refreshTokenCookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+    refreshTokenCookie.setPath("/");
+    refreshTokenCookie.setHttpOnly(true);
+    refreshTokenCookie.setAttribute("SameSite", "Lax");
+    refreshTokenCookie.setMaxAge(maxAge);
+    return refreshTokenCookie;
+  }
+
 
   private JWTClaimsSet getClaimsFromToken(String token) {
     try {
