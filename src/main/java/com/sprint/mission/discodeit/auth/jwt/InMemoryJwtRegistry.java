@@ -41,7 +41,11 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   public boolean hasActiveJwtInformationByUserId(UUID userId) {
     // 사용자 로그인 여부
     Queue<JwtInformation> queue = origin.getOrDefault(userId, null);
-    return queue != null && !queue.isEmpty();
+    if (queue == null || queue.isEmpty()) {
+      return false;
+    }
+    return queue.stream()
+        .anyMatch(info -> jwtTokenProvider.validateToken(info.accessToken()));
   }
 
   @Override
@@ -49,7 +53,8 @@ public class InMemoryJwtRegistry implements JwtRegistry {
     // 필터에서 유효 토큰 확인용
     return origin.values().stream()
         .flatMap(Collection::stream)
-        .anyMatch(i -> i.accessToken().equals(accessToken));
+        .anyMatch(i -> i.accessToken().equals(accessToken)
+            && jwtTokenProvider.validateToken(accessToken));
   }
 
   @Override
@@ -57,7 +62,8 @@ public class InMemoryJwtRegistry implements JwtRegistry {
     // 토큰 재 발급 시 유효 토큰 확인용
     return origin.values().stream()
         .flatMap(Collection::stream)
-        .anyMatch(i -> i.refreshToken().equals(refreshToken));
+        .anyMatch(i -> i.refreshToken().equals(refreshToken)
+            && jwtTokenProvider.validateToken(refreshToken));
   }
 
   @Override
