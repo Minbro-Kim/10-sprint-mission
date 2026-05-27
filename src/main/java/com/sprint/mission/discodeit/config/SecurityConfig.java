@@ -52,14 +52,14 @@ public class SecurityConfig {
   private final CustomAuthenticationEntryPoint authenticationEntryPoint;
   private final CustomAccessDeniedHandler accessDeniedHandler;
   //private final DiscodeitUserDetailsService userDetailsService;
-  private final DataSource dataSource;
+  //private final DataSource dataSource;
   private final CustomPermissionEvaluator permissionEvaluator;
   private final JwtLoginSuccessHandler loginSuccessHandler;
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final JwtLogoutHandler jwtLogoutHandler;
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry)
+  public SecurityFilterChain filterChain(HttpSecurity http)
       throws Exception {
     return http
         .csrf(csrf -> csrf
@@ -131,22 +131,22 @@ public class SecurityConfig {
     return handler;
   }
 
-  @Bean
-  public SessionRegistry sessionRegistry() {
-    return new SessionRegistryImpl();
-  }
+//  @Bean
+//  public SessionRegistry sessionRegistry() {
+//    return new SessionRegistryImpl();
+//  }
 
-  @Bean
-  public HttpSessionEventPublisher httpSessionEventPublisher() {
-    return new HttpSessionEventPublisher();
-  }
+//  @Bean
+//  public HttpSessionEventPublisher httpSessionEventPublisher() {
+//    return new HttpSessionEventPublisher();
+//  }
 
-  @Bean
-  public PersistentTokenRepository persistentTokenRepository(DataSource dataSource) {
-    JdbcTokenRepositoryImpl repo = new JdbcTokenRepositoryImpl();
-    repo.setDataSource(dataSource);
-    return repo;
-  }
+//  @Bean
+//  public PersistentTokenRepository persistentTokenRepository(DataSource dataSource) {
+//    JdbcTokenRepositoryImpl repo = new JdbcTokenRepositoryImpl();
+//    repo.setDataSource(dataSource);
+//    return repo;
+//  }
 
   @Bean
   public CookieCsrfTokenRepository cookieCsrfTokenRepository() {
@@ -158,24 +158,24 @@ public class SecurityConfig {
     return csrfTokenRepository;
   }
 
-  @Bean
-  public RememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
-    //db 기반 저장
-    PersistentTokenBasedRememberMeServices rememberMeServices =
-        new PersistentTokenBasedRememberMeServices(
-            "remember-me-key",
-            userDetailsService,
-            persistentTokenRepository(dataSource)
-        );
-
-    rememberMeServices.setTokenValiditySeconds(7 * 24 * 60 * 60);
-    rememberMeServices.setParameter("remember-me");
-    // samesite 설정
-    rememberMeServices.setCookieCustomizer(cookie -> {
-      cookie.setAttribute("SameSite", "Lax");
-    });
-
-    return rememberMeServices;
-  }
+//  @Bean
+//  public RememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
+//    //db 기반 저장
+//    PersistentTokenBasedRememberMeServices rememberMeServices =
+//        new PersistentTokenBasedRememberMeServices(
+//            "remember-me-key",
+//            userDetailsService,
+//            persistentTokenRepository(dataSource)
+//        );
+//
+//    rememberMeServices.setTokenValiditySeconds(7 * 24 * 60 * 60);
+//    rememberMeServices.setParameter("remember-me");
+//    // samesite 설정
+//    rememberMeServices.setCookieCustomizer(cookie -> {
+//      cookie.setAttribute("SameSite", "Lax");
+//    });
+//
+//    return rememberMeServices;
+//  }
 }
 
