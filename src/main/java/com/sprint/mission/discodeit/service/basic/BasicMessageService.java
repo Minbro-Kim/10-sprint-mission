@@ -9,6 +9,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.message.InvalidMessageException;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
@@ -20,11 +21,11 @@ import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.MessageService;
 
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -48,9 +49,9 @@ public class BasicMessageService implements MessageService {
   private final BinaryContentMapper binaryContentMapper;
   private final MessageMapper messageMapper;
   private final ReadStatusRepository readStatusRepository;
-  private final BinaryContentStorage binaryContentStorage;
   private final PageResponseMapper pageResponseMapper;
   private final UserSessionManager userSessionManager;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
   public MessageDto create(MessageCreateRequest dto,
@@ -74,7 +75,9 @@ public class BasicMessageService implements MessageService {
     Message message = messageMapper.toEntity(dto, user, channel, attachments);
     messageRepository.save(message);
     for (int i = 0; i < binaryContentCreateDtos.size(); i++) {
-      binaryContentStorage.put(attachments.get(i).getId(), binaryContentCreateDtos.get(i).bytes());
+      applicationEventPublisher.publishEvent(
+          new BinaryContentCreatedEvent(attachments.get(i),
+              binaryContentCreateDtos.get(i).bytes()));
       log.debug("메세지 첨부파일 저장: messageId={}, binaryContentId={}", message.getId(),
           attachments.get(i).getId());
     }

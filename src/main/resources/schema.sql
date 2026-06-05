@@ -5,7 +5,9 @@ CREATE TABLE binary_contents
     size         BIGINT                   NOT NULL,
     bytes        BYTEA                    NOT NULL,
     content_type VARCHAR(100)             NOT NULL,
-    created_at   TIMESTAMP WITH TIME ZONE NOT NULL
+    status       varchar(20)              NOT NULL,
+    created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at   timestamp with time zone
 );
 
 /*

@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNameAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -14,11 +15,11 @@ import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -43,9 +44,9 @@ public class BasicUserService implements UserService {
   private final ChannelRepository channelRepository;
   private final UserMapper userMapper;
   private final BinaryContentMapper binaryContentMapper;
-  private final BinaryContentStorage binaryContentStorage;
   private final PasswordEncoder passwordEncoder;
   private final UserSessionManager userSessionManager;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
   public UserDto create(UserCreateRequest dto,
@@ -70,7 +71,8 @@ public class BasicUserService implements UserService {
         .toList();
     readStatusRepository.saveAll(readStatuses);
     if (binaryContentCreateDto.isPresent()) {
-      binaryContentStorage.put(profile.getId(), binaryContentCreateDto.get().bytes());
+      applicationEventPublisher.publishEvent(
+          new BinaryContentCreatedEvent(profile, binaryContentCreateDto.get().bytes()));
       log.debug("프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
     }
     log.info("사용자 생성 성공: userId={}  hasProfile={}",
@@ -127,7 +129,8 @@ public class BasicUserService implements UserService {
     user.update(dto.username(), dto.email(),
         (dto.password() != null ? passwordEncoder.encode(dto.password()) : null), profile);
     if (binaryContentCreateDto.isPresent()) {//위에서 생성하면 업데이트 실패시 스토리지 저장을 되돌릴수 없기 때문
-      binaryContentStorage.put(profile.getId(), binaryContentCreateDto.get().bytes());
+      applicationEventPublisher.publishEvent(
+          new BinaryContentCreatedEvent(profile, binaryContentCreateDto.get().bytes()));
       log.debug("새로운 프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
     }
     log.info("사용자 수정 성공: userId={}, changeProfile={}]",
