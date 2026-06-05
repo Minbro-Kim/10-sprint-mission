@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
+import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.auth.jwt.JwtInformation;
 import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
@@ -10,6 +11,7 @@ import com.sprint.mission.discodeit.auth.jwt.dto.JwtDto;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -21,6 +23,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,7 @@ public class BasicAuthService implements AuthService {
   private final JwtTokenProvider jwtTokenProvider;
   private final JwtRegistry jwtRegistry;
   private final DiscodeitUserDetailsService discodeitUserDetailsService;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
   public UserDto updateRole(UserRoleUpdateRequest request) {
@@ -44,6 +48,7 @@ public class BasicAuthService implements AuthService {
     User user = userRepository.findById(request.userId())
         .orElseThrow(() -> new UserNotFoundException().addDetail("userId", request.userId()));
 
+    Role beforeRole = user.getRole();
     if (user.getRole() == request.newRole()) {
       log.info("사용자 권한 변경 요청(동일한 권한, 세션 만료x): userId={}", request.userId());
       return userMapper.toDto(user, userSessionManager.isOnline(user));
@@ -51,6 +56,8 @@ public class BasicAuthService implements AuthService {
     user.updateRole(request.newRole());
     userSessionManager.setOffline(user);
     log.info("사용자 권한 변경 및 세션 만료 완료: userId={}, newRole={}", request.userId(), request.newRole());
+    applicationEventPublisher.publishEvent(
+        new RoleUpdatedEvent(user.getId(), beforeRole, request.newRole()));
     return userMapper.toDto(user, false);
   }
 

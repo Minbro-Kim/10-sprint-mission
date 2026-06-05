@@ -29,4 +29,7 @@ public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
   @Modifying
   @Query("delete from ReadStatus r where r.user.id = :userId")
   void deleteByUserId(UUID userId);
+
+  List<ReadStatus> findAllByChannelIdAndNotificationEnabledAndUserIdNot(UUID channelId,
+      boolean enabled, UUID userId);
 }

@@ -55,12 +55,13 @@ CREATE TABLE channels
 
 CREATE TABLE read_statuses
 (
-    id           UUID PRIMARY KEY,
-    user_id      UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    channel_id   UUID                     NOT NULL REFERENCES channels (id) ON DELETE CASCADE,
-    last_read_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
-    updated_at   TIMESTAMP WITH TIME ZONE,
+    id                   UUID PRIMARY KEY,
+    user_id              UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    channel_id           UUID                     NOT NULL REFERENCES channels (id) ON DELETE CASCADE,
+    last_read_at         TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at           TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at           TIMESTAMP WITH TIME ZONE,
+    notification_enabled boolean                  NOT NULL,
     CONSTRAINT user_channel_id UNIQUE (user_id, channel_id)
 );
 
@@ -87,3 +88,12 @@ CREATE TABLE persistent_logins
     token     VARCHAR(64) NOT NULL,
     last_used TIMESTAMP   NOT NULL
 );
+
+CREATE TABLE notifications
+(
+    id          UUID PRIMARY KEY,
+    title       VARCHAR(100)             NOT NULL,
+    content     VARCHAR(255)             NOT NULL,
+    receiver_id UUID                     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    created_at  TIMESTAMP WITH TIME ZONE NOT NULL
+)

@@ -35,7 +35,8 @@ public enum ErrorCode {
   STORAGE_UPLOAD_FAILED(500, "BC101", "파일 업로드 중 오류 발생"),
   STORAGE_DOWNLOAD_FAILED(500, "BC102", "파일 다운로드 중 오류 발생"),
   STORAGE_GET_FAILED(500, "BC103", "파일을 읽어오는 중 오류 발생"),
-
+  //NOTIFICATION
+  NOTIFICATION_NOT_FOUND(404, "NF001", "존재하지 않는 알림"),
   //그외
   BAD_REQUEST(400, "C001", "입력값 유효성 검증 실패"),
   INTERNAL_SERVER_ERROR(500, "C999", "서버 내부 오류 발생");
