@@ -10,7 +10,7 @@ public record ReadStatusUpdateRequest(
     @JsonProperty("newLastReadAt")
     Instant lastReadAt,
 
-    boolean newNotificationEnabled
+    Boolean newNotificationEnabled
 ) {
 
 }
