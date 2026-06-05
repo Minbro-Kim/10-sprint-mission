@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -18,8 +19,11 @@ public class BinaryContentListener {
   private final BinaryContentStorage binaryContentStorage;
   private final BinaryContentService binaryContentService;
 
+  @Async("binaryContentTaskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  public void handleBinaryContentCreateEvent(BinaryContentCreatedEvent event) {
+  public void handleBinaryContentCreateEvent(BinaryContentCreatedEvent event)
+      throws InterruptedException {
+    Thread.sleep(3000);
     try {
       binaryContentStorage.put(event.binaryContent().getId(), event.bytes());
       log.debug("바이너리 컨텐츠 스토리지 저장 성공");

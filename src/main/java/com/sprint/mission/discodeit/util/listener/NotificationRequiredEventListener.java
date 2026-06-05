@@ -1,12 +1,19 @@
 package com.sprint.mission.discodeit.util.listener;
 
+import com.sprint.mission.discodeit.auth.enums.Role;
 import com.sprint.mission.discodeit.dto.notification.NotificationCreateRequest;
+import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
+import com.sprint.mission.discodeit.event.ErrorNotificationEvent;
 import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
+import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -18,7 +25,10 @@ public class NotificationRequiredEventListener {
 
   private final NotificationService notificationService;
   private final ReadStatusRepository readStatusRepository;
+  private final UserRepository userRepository;
+  private final UserService userService;
 
+  @Async("notificationTaskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(MessageCreatedEvent event) {
     //채널이름, 보낸사람, 메세지 내용
@@ -33,12 +43,24 @@ public class NotificationRequiredEventListener {
         });
   }
 
+  @Async("notificationTaskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(RoleUpdatedEvent event) {
     //권한 변경 당사자에게 알림
     String title = "권한이 변경되었습니다.";
     String content = event.beforeRole() + " -> " + event.afterRole();
     notificationService.create(new NotificationCreateRequest(event.userId(), title, content));
+  }
+
+  @Async("notificationTaskExecutor")
+  @EventListener
+  public void on(ErrorNotificationEvent event) {
+    userRepository.findAllByRole(Role.ADMIN)
+        .forEach(u -> notificationService.create(new NotificationCreateRequest(
+            u.getId(),
+            event.title(),
+            event.content()
+        )));
   }
 
 }
