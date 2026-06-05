@@ -37,7 +37,7 @@ public class BasicNotificationService implements NotificationService {
   @Override
   @Transactional(readOnly = true)
   public List<NotificationDto> getNotifications(UUID userId) {
-    return notificationRepository.findAllByReceiverId(userId).stream()
+    return notificationRepository.findAllByReceiverIdOrderByCreatedAtDesc(userId).stream()
         .map(notificationMapper::toDto)
         .toList();
   }
