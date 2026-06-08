@@ -16,9 +16,11 @@ import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
@@ -27,6 +29,7 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.cache.UserCacheService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
@@ -43,6 +46,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -68,6 +72,10 @@ class BasicUserServiceTest {
   private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
   @Mock
   private UserSessionManager userSessionManager;
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
+  @Mock
+  private UserCacheService userCacheService;
 
   @InjectMocks
   private BasicUserService userService;
@@ -97,7 +105,8 @@ class BasicUserServiceTest {
     User user = User.create(dto.username(), dto.email(), passwordEncoder.encode(dto.password()),
         profile);
     BinaryContentDto binaryContentDto = new BinaryContentDto(UUID.randomUUID(),
-        profile.getFileName(), profile.getSize(), profile.getContentType());
+        profile.getFileName(), profile.getSize(), profile.getContentType(),
+        BinaryContentStatus.PROCESSING);
     UserDto userDto = new UserDto(UUID.randomUUID(), user.getUsername(), user.getEmail(), Role.USER,
         binaryContentDto, true, Instant.now(), Instant.now());
     List<Channel> channels = List.of(new Channel[]{mock(Channel.class), mock(Channel.class)});
@@ -130,8 +139,7 @@ class BasicUserServiceTest {
     ArgumentCaptor<List<ReadStatus>> listCaptor = ArgumentCaptor.forClass(List.class);
     then(readStatusRepository).should().saveAll(listCaptor.capture());
     assertEquals(channels.size(), listCaptor.getValue().size());
-
-    then(binaryContentStorage).should().put(any(), eq(profileDto.bytes()));
+    then(applicationEventPublisher).should().publishEvent(any(BinaryContentCreatedEvent.class));
   }
 
   @Test
@@ -206,7 +214,7 @@ class BasicUserServiceTest {
     assertTrue(passwordEncoder.matches(updateDto.password(), existingUser.getPassword()));
 
     then(binaryContentRepository).should().save(profile);
-    then(binaryContentStorage).should().put(any(), eq(binaryContentCreateDto.bytes()));
+    then(applicationEventPublisher).should().publishEvent(any(BinaryContentCreatedEvent.class));
   }
 
   @Test

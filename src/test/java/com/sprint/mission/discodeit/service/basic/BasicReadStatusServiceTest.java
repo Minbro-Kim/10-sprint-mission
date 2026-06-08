@@ -82,7 +82,7 @@ class BasicReadStatusServiceTest {
 
     readStatusId = UUID.randomUUID();
     readStatus = ReadStatus.create(user, channel, lastReadAt);
-    readStatusDto = new ReadStatusDto(readStatusId, userId, channelId, lastReadAt);
+    readStatusDto = new ReadStatusDto(readStatusId, userId, channelId, lastReadAt, true);
 
   }
 
@@ -180,7 +180,7 @@ class BasicReadStatusServiceTest {
   void updateReadStatusSuccess() {
     //given
     Instant newLastReadAt = lastReadAt.plusSeconds(60);
-    ReadStatusUpdateRequest request = new ReadStatusUpdateRequest(newLastReadAt);
+    ReadStatusUpdateRequest request = new ReadStatusUpdateRequest(newLastReadAt, null);
     given(readStatusRepository.findById(readStatusId)).willReturn(Optional.of(readStatus));
     given(readStatusMapper.toDto(eq(readStatus))).willReturn(readStatusDto);
 
@@ -198,7 +198,7 @@ class BasicReadStatusServiceTest {
   void updateReadStatusFailure() {
     //given
     Instant newLastReadAt = lastReadAt.plusSeconds(60);
-    ReadStatusUpdateRequest request = new ReadStatusUpdateRequest(newLastReadAt);
+    ReadStatusUpdateRequest request = new ReadStatusUpdateRequest(newLastReadAt, null);
     given(readStatusRepository.findById(readStatusId)).willReturn(Optional.empty());
     //when & then
     assertThrows(ReadStatusNotFoundException.class,

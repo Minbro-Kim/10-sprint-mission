@@ -23,6 +23,7 @@ import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.message.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.message.PageResponse;
 import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.exception.GlobalExceptionHandler;
 import com.sprint.mission.discodeit.exception.message.InvalidMessageException;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
@@ -83,8 +84,9 @@ class MessageControllerTest {
         Instant.now(),
         Instant.now());
     BinaryContentDto attachmentDto1 = new BinaryContentDto(UUID.randomUUID(), "myImage", 50L,
-        "jpg");
-    BinaryContentDto attachmentDto2 = new BinaryContentDto(UUID.randomUUID(), "myTxt", 50L, "txt");
+        "jpg", BinaryContentStatus.PROCESSING);
+    BinaryContentDto attachmentDto2 = new BinaryContentDto(UUID.randomUUID(), "myTxt", 50L, "txt",
+        BinaryContentStatus.PROCESSING);
     List<BinaryContentDto> attachments = List.of(attachmentDto1, attachmentDto2);
     MessageDto messageDto = new MessageDto(messageId, request.content(), request.channelId(),
         userDto,
@@ -172,8 +174,9 @@ class MessageControllerTest {
         Instant.now(),
         Instant.now());
     BinaryContentDto attachmentDto1 = new BinaryContentDto(UUID.randomUUID(), "myImage", 50L,
-        "jpg");
-    BinaryContentDto attachmentDto2 = new BinaryContentDto(UUID.randomUUID(), "myTxt", 50L, "txt");
+        "jpg", BinaryContentStatus.PROCESSING);
+    BinaryContentDto attachmentDto2 = new BinaryContentDto(UUID.randomUUID(), "myTxt", 50L, "txt",
+        BinaryContentStatus.PROCESSING);
     List<BinaryContentDto> attachments = List.of(attachmentDto1, attachmentDto2);
     MessageDto messageDto = new MessageDto(messageId, request.newContent(), channelId,
         userDto,

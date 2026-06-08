@@ -29,6 +29,7 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.cache.ChannelCacheService;
 import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import java.util.HashSet;
@@ -45,6 +46,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,6 +67,12 @@ class BasicChannelServiceTest {
   private BinaryContentRepository binaryContentRepository;
   @Mock
   private UserSessionManager userSessionManager;
+
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
+
+  @Mock
+  private ChannelCacheService channelCacheService;
 
   @InjectMocks
   private BasicChannelService channelService;
@@ -244,21 +252,32 @@ class BasicChannelServiceTest {
     ReflectionTestUtils.setField(c1, "id", c1Id);
     ReflectionTestUtils.setField(c2, "id", c2Id);
 
+    ChannelDto c1Dto = new ChannelDto(c1.getId(), c2.getType(), c1.getName(), c1.getDescription(),
+        Instant.now().minusSeconds(10), null,
+        null, List.of(mock(UserDto.class), mock(UserDto.class), mock(UserDto.class)));
+    ChannelDto c2Dto = new ChannelDto(c2.getId(), c2.getType(), c2.getName(), c2.getDescription(),
+        Instant.now(),
+        null, null,
+        List.of(mock(UserDto.class), mock(UserDto.class)));
+    List<ChannelDto> publicChannelDtos = List.of(c1Dto);
+    List<ChannelDto> privateChannelDtos = List.of(c2Dto);
     Set<UUID> onlineUsers = new HashSet<>(Set.of(UUID.randomUUID(), UUID.randomUUID()));
 
+    given(channelCacheService.getPublicChannelsWithoutLastMessageAtAndOnline())
+        .willReturn(publicChannelDtos);
+    given(channelCacheService.getPrivateChannelsWithoutLastMessageAtAndOnline(userId))
+        .willReturn(privateChannelDtos);
     given(userRepository.existsById(userId)).willReturn(true);
-    given(readStatusRepository.findAllByUserIdFetchChannel(userId)).willReturn(readStatusesByUser);
-    given(readStatusRepository.findAllByChannelIdInFetchUser(channelKeySet)).willReturn(
-        readStatusesByChannel);
+
     given(messageRepository.findAllLastMessagesByChannelId(channelKeySet)).willReturn(
         lastMessageTimeDtos);
     given(userSessionManager.getOnlineUserIds()).willReturn(onlineUsers);
-    given(channelMapper.toDto(eq(c1), any(), any(),
+    given(channelMapper.toDto(eq(c1Dto), any(), any(),
         eq(onlineUsers))).willReturn(
         new ChannelDto(c1.getId(), c2.getType(), c1.getName(), c1.getDescription(),
             Instant.now().minusSeconds(10), null,
             null, List.of(mock(UserDto.class), mock(UserDto.class), mock(UserDto.class))));
-    given(channelMapper.toDto(eq(c2), any(), any(),
+    given(channelMapper.toDto(eq(c2Dto), any(), any(),
         eq(onlineUsers))).willReturn(
         new ChannelDto(c2.getId(), c2.getType(), c2.getName(), c2.getDescription(), Instant.now(),
             null, null,
@@ -288,7 +307,9 @@ class BasicChannelServiceTest {
   void deleteChannelSuccess() {
     //given
     UUID channelId = UUID.randomUUID();
-    given(channelRepository.existsById(channelId)).willReturn(true);
+    Channel c1 = Channel.create(ChannelType.PUBLIC, "name1", "desc1");
+    ReflectionTestUtils.setField(c1, "id", channelId);
+    given(channelRepository.findById(channelId)).willReturn(Optional.of(c1));
 
     //when
     channelService.delete(channelId);
@@ -299,6 +320,7 @@ class BasicChannelServiceTest {
     inOrder.verify(binaryContentRepository).bulkDeleteByChannelId(channelId);
     inOrder.verify(messageRepository).bulkDeleteByChannelId(channelId);
     inOrder.verify(channelRepository).deleteById(channelId);
+    then(channelCacheService).should().removePublicChannelCaches();
   }
 
   @Test
@@ -306,7 +328,7 @@ class BasicChannelServiceTest {
   void deleteChannelFailure() {
     //given
     UUID channelId = UUID.randomUUID();
-    given(channelRepository.existsById(channelId)).willReturn(false);
+    given(channelRepository.findById(channelId)).willReturn(Optional.empty());
 
     //when & then
     assertThrows(ChannelNotFoundException.class, () ->

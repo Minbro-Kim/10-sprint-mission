@@ -20,6 +20,7 @@ import com.sprint.mission.discodeit.dto.binarycontent.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.dto.user.UserUpdateRequest;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
@@ -70,7 +71,8 @@ class UserControllerTest {
     //given
     UUID userId = UUID.randomUUID();
     UserCreateRequest request = new UserCreateRequest("test", "test@test.com", "test123");
-    BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "myImage", 50L, "jpg");
+    BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "myImage", 50L, "jpg",
+        BinaryContentStatus.PROCESSING);
     UserDto userDto = new UserDto(userId, "test", "test@test.com", Role.USER, profiledto, true,
         Instant.now(),
         Instant.now());
@@ -137,7 +139,8 @@ class UserControllerTest {
     //given
     UUID userId = UUID.randomUUID();
     UserUpdateRequest request = new UserUpdateRequest(null, "new@test.com", null);
-    BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "newImage", 50L, "jpg");
+    BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "newImage", 50L, "jpg",
+        BinaryContentStatus.PROCESSING);
     UserDto userDto = new UserDto(userId, "test", "new@test.com", Role.USER, profiledto, true,
         Instant.now(),
         Instant.now());
@@ -183,7 +186,8 @@ class UserControllerTest {
     //given
     UUID wrongUserId = UUID.randomUUID();
     UserUpdateRequest request = new UserUpdateRequest(null, "new@test.com", null);
-    BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "newImage", 50L, "jpg");
+    BinaryContentDto profiledto = new BinaryContentDto(UUID.randomUUID(), "newImage", 50L, "jpg",
+        BinaryContentStatus.PROCESSING);
     UserDto userDto = new UserDto(wrongUserId, "test", "new@test.com", Role.USER, profiledto, true,
         Instant.now(),
         Instant.now());
