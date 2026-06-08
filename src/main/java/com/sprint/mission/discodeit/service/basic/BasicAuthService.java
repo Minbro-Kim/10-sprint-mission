@@ -23,6 +23,8 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class BasicAuthService implements AuthService {
   private final JwtRegistry jwtRegistry;
   private final DiscodeitUserDetailsService discodeitUserDetailsService;
   private final ApplicationEventPublisher applicationEventPublisher;
+  private final CacheManager cacheManager;
 
   @Override
   public UserDto updateRole(UserRoleUpdateRequest request) {
@@ -58,6 +61,10 @@ public class BasicAuthService implements AuthService {
     log.info("사용자 권한 변경 및 세션 만료 완료: userId={}, newRole={}", request.userId(), request.newRole());
     applicationEventPublisher.publishEvent(
         new RoleUpdatedEvent(user.getId(), beforeRole, request.newRole()));
+    Cache userListcache = cacheManager.getCache("userListCache");
+    if (userListcache != null) {
+      userListcache.clear();
+    }
     return userMapper.toDto(user, false);
   }
 
