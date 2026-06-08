@@ -16,6 +16,16 @@ spring:
       client:
         instance:
           name: discodeit
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: discodeit-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 logging:
   level:
@@ -91,3 +101,7 @@ jwt:
   access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:#{60*5}} #{60*5}
   refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:#{60*60*24*7}} #60*60*24*7
   maxActiveJwtCount: 1
+
+notification-type:
+  kafka:
+    enabled: false

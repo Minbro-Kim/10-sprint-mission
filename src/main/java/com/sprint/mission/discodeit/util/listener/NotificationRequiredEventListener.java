@@ -13,6 +13,7 @@ import com.sprint.mission.discodeit.service.NotificationService;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -22,12 +23,16 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(
+    name = "notification-type.kafka.enabled",
+    havingValue = "false",
+    matchIfMissing = true //디폴트
+)
 public class NotificationRequiredEventListener {
 
   private final NotificationService notificationService;
   private final ReadStatusRepository readStatusRepository;
   private final UserRepository userRepository;
-  private final UserService userService;
 
   @Async("notificationTaskExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
