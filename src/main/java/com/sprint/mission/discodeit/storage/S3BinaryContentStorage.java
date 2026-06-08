@@ -152,7 +152,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   @Recover
   public UUID recover(StorageUploadFailedException e, UUID id, byte[] bytes) {
     // MDC에서 키 꺼내기
-    String requestId = MDC.get("requestId");
+    String requestId = MDC.get("request_id");
     String content =
         "RequestId: " + requestId + "\nContentId: " + id + "\nError: " + e.getMessage();
     applicationEventPublisher.publishEvent(new ErrorNotificationEvent(
