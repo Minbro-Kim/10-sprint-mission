@@ -15,10 +15,14 @@ import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.*;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.service.cache.UserCacheService;
 import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
@@ -47,8 +51,13 @@ public class BasicUserService implements UserService {
   private final PasswordEncoder passwordEncoder;
   private final UserSessionManager userSessionManager;
   private final ApplicationEventPublisher applicationEventPublisher;
+  private final UserCacheService userCacheService;
 
   @Override
+  @Caching(evict = {
+      @CacheEvict(value = "userListCache", allEntries = true), // 유저 목록은 전체 초기화
+      @CacheEvict(value = "channelListCache", key = "'public'") // 공개채널만 초기화
+  })
   public UserDto create(UserCreateRequest dto,
       Optional<BinaryContentCreateDto> binaryContentCreateDto) {
     log.debug("사용자 생성 시도: email={}, username={}", dto.email(), dto.username());
@@ -91,15 +100,29 @@ public class BasicUserService implements UserService {
 
   @Transactional(readOnly = true)
   @Override
+  @Cacheable(value = "userListCache", key = "'with_session'")
   public List<UserDto> findAll() {
+    /*
     List<User> users = userRepository.findAllFetchUserInfo();
     List<UserDto> response = new ArrayList<>();
     Set<UUID> onlineUserIds = userSessionManager.getOnlineUserIds();
     users.forEach(u -> response.add(userMapper.toDto(u, onlineUserIds.contains(u.getId()))));
     return response;
+    
+     */
+    log.debug("세션 포함 사용자 전체 목록");
+    List<UserDto> cachedUserDtos = userCacheService.findAllUsers();
+    Set<UUID> onlineUserIds = userSessionManager.getOnlineUserIds();
+    return cachedUserDtos.stream()
+        .map(u -> userMapper.toDto(u, onlineUserIds.contains(u.id())))
+        .toList();
   }
 
   @Override
+  @Caching(evict = {
+      @CacheEvict(value = "userListCache", allEntries = true), // 유저 목록은 전체 초기화
+      @CacheEvict(value = "channelListCache", allEntries = true)
+  })
   public UserDto update(UUID userId, UserUpdateRequest dto,
       Optional<BinaryContentCreateDto> binaryContentCreateDto) {
     log.debug("사용자 수정 시도: userId={}", userId);
@@ -141,6 +164,10 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @Caching(evict = {
+      @CacheEvict(value = "userListCache", allEntries = true), // 유저 목록은 전체 초기화
+      @CacheEvict(value = "channelListCache", allEntries = true)
+  })
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시도: userId={}", userId);
     User user = get(userId);

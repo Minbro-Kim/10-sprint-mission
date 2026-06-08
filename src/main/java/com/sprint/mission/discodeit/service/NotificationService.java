@@ -11,6 +11,6 @@ public interface NotificationService {
 
   List<NotificationDto> getNotifications(UUID userId);
 
-  void delete(UUID notificationId);
+  void delete(UUID userId, UUID notificationId);
 
 }

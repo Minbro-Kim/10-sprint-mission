@@ -8,6 +8,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
@@ -20,6 +22,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
   private final int maxActiveJwtCount = 1; // 최대 동시 로그인 수
 
   private final JwtTokenProvider jwtTokenProvider;
+  private final CacheManager cacheManager;
 
 
   @Override
@@ -89,7 +92,13 @@ public class InMemoryJwtRegistry implements JwtRegistry {
       queue.removeIf(i -> !jwtTokenProvider.validateToken(i.refreshToken()));
     });
 
-    origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+    boolean hasExpired = origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+    if (hasExpired) {
+      Cache userListCache = cacheManager.getCache("userListCache");
+      if (userListCache != null) {
+        userListCache.evict("with_session");
+      }
+    }
   }
 
   @Override

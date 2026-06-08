@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.mapper;
 import com.sprint.mission.discodeit.dto.channel.ChannelDto;
 import com.sprint.mission.discodeit.dto.channel.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.channel.PublicChannelCreateRequest;
+import com.sprint.mission.discodeit.dto.user.UserDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
@@ -56,7 +57,7 @@ public abstract class ChannelMapper {
   public Channel toEntity(PrivateChannelCreateRequest dto) {
     return Channel.create(ChannelType.PRIVATE, null, null);
   }
-  
+
   public ChannelDto toDto(Channel channel, List<User> users, Instant lastMessageAt,
       Set<UUID> onlineUserIds) {
     return new ChannelDto(
@@ -68,6 +69,21 @@ public abstract class ChannelMapper {
         channel.getUpdatedAt(),
         lastMessageAt, //아직 채널에 메세지가 없는 경우 null
         users.stream().map(user -> userMapper.toDto(user, onlineUserIds.contains(user.getId())))
+            .toList()
+    );
+  }
+
+  public ChannelDto toDto(ChannelDto channel, List<UserDto> users, Instant lastMessageAt,
+      Set<UUID> onlineUserIds) {
+    return new ChannelDto(
+        channel.id(),
+        channel.type(),
+        channel.name(),
+        channel.description(),
+        channel.createdAt(),
+        channel.updatedAt(),
+        lastMessageAt, //아직 채널에 메세지가 없는 경우 null
+        users.stream().map(user -> userMapper.toDto(user, onlineUserIds.contains(user.id())))
             .toList()
     );
   }

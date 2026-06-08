@@ -11,6 +11,9 @@ import com.sprint.mission.discodeit.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -27,6 +30,7 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @CacheEvict(value = "notificationListCache", key = "#request.receiverId()")
   public NotificationDto create(NotificationCreateRequest request) {
     User receiver = userRepository.getReferenceById(request.receiverId());
     Notification notification = Notification.create(request.title(), request.content(), receiver);
@@ -36,6 +40,7 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "notificationListCache", key = "#userId")
   public List<NotificationDto> getNotifications(UUID userId) {
     return notificationRepository.findAllByReceiverIdOrderByCreatedAtDesc(userId).stream()
         .map(notificationMapper::toDto)
@@ -44,7 +49,8 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @PreAuthorize("hasPermission(#notificationId, 'NOTIFICATION', 'DELETE')")
-  public void delete(UUID notificationId) {
+  @CacheEvict(value = "notificationListCache", key = "#userId")
+  public void delete(UUID userId, UUID notificationId) {
     notificationRepository.deleteById(notificationId);
   }
 }

@@ -50,6 +50,10 @@ dependencies {
     implementation 'com.nimbusds:nimbus-jose-jwt:10.3'
 
     implementation 'org.springframework.retry:spring-retry'
+
+    //캐시
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 }
 
 test {

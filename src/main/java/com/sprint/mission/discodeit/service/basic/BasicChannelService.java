@@ -1,5 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import static java.util.stream.Collectors.toSet;
+
 import com.sprint.mission.discodeit.dto.channel.ChannelDto;
 import com.sprint.mission.discodeit.dto.channel.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.channel.PrivateChannelCreateRequest;
@@ -20,10 +22,13 @@ import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 
+import com.sprint.mission.discodeit.service.cache.ChannelCacheService;
 import com.sprint.mission.discodeit.util.UserSessionManager;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -42,8 +47,10 @@ public class BasicChannelService implements ChannelService {
   private final ChannelMapper channelMapper;
   private final BinaryContentRepository binaryContentRepository;
   private final UserSessionManager userSessionManager;
+  private final ChannelCacheService channelCacheService;
 
   @Override
+  @CacheEvict(value = "channelListCache", key = "'public'")
   public ChannelDto create(PublicChannelCreateRequest dto) {
     log.debug("공개 채널 생성 시도: channelName={}", dto.name());
     Channel channel = channelMapper.toEntity(dto);
@@ -78,6 +85,7 @@ public class BasicChannelService implements ChannelService {
         .toList();
     readStatusRepository.saveAll(readStatuses);
     log.info("비공개 채널 생성 성공: channelId={}", channel.getId());
+    channelCacheService.removePrivateChannelCaches(Set.copyOf(dto.memberIds()));//해당 멤버 개인채널캐시 삭젠
     return channelMapper.toDto(channel, members,
         null, getOnlineUserIds());
   }
@@ -90,13 +98,14 @@ public class BasicChannelService implements ChannelService {
         getOnlineUserIds());
   }
 
+  //채널목록은 캐시값 사용 + 마지막 메시지, 현재 온라인 유저는 실시간
   @Override
   @Transactional(readOnly = true)
   public List<ChannelDto> findAllByUserId(UUID userId) {
     if (!userRepository.existsById(userId)) {
       throw new UserNotFoundException().addDetail("userId", userId);
     }
-    List<ChannelDto> response = new ArrayList<>();
+    //List<ChannelDto> response = new ArrayList<>();
         /*
             사용자가 속한 채널 = 비공개+공개
          */
@@ -106,6 +115,7 @@ public class BasicChannelService implements ChannelService {
 //          response.add(channelMapper.toDto(r.getChannel()));
 //        });
     //변경로직
+    /*
     Map<UUID, List<User>> userMap = new HashMap<>();
     Map<UUID, Channel> myChannels = new HashMap<>();
     readStatusRepository.findAllByUserIdFetchChannel(userId)
@@ -118,13 +128,31 @@ public class BasicChannelService implements ChannelService {
           userMap.get(r.getChannel().getId()).add(r.getUser());
         });
 
+     */
+
+    List<ChannelDto> cachedPublicChannelDtos = channelCacheService.getPublicChannelsWithoutLastMessageAtAndOnline();
+    List<ChannelDto> cachedPrivateChannelDtos = channelCacheService.getPrivateChannelsWithoutLastMessageAtAndOnline(
+        userId);
+
+    List<ChannelDto> allChannelDtos = new ArrayList<>();
+    allChannelDtos.addAll(cachedPublicChannelDtos);
+    allChannelDtos.addAll(cachedPrivateChannelDtos);
+
+    if (allChannelDtos.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    Set<UUID> channelIds = allChannelDtos.stream().map(ChannelDto::id).collect(toSet());
+
     Map<UUID, Instant> lastMessages = new HashMap<>();
-    messageRepository.findAllLastMessagesByChannelId(userMap.keySet())
+    messageRepository.findAllLastMessagesByChannelId(channelIds)
         .forEach(m -> {
           lastMessages.put(m.channelId(), m.maxCreatedAt());
         });
 
     Set<UUID> onlineUserIds = userSessionManager.getOnlineUserIds();
+
+    /*
     myChannels.values().forEach(c -> {
       response.add(channelMapper.toDto(c, userMap.get(c.getId()),
           lastMessages.getOrDefault(c.getId(), null), onlineUserIds));
@@ -133,9 +161,21 @@ public class BasicChannelService implements ChannelService {
     return response.stream()
         .sorted(Comparator.comparing(ChannelDto::createdAt))
         .toList();//채널 순서 보장
+
+     */
+
+    return allChannelDtos.stream()
+        .map(c -> channelMapper.toDto(
+            c,
+            c.participants(),
+            lastMessages.getOrDefault(c.id(), null),
+            onlineUserIds)
+        ).sorted(Comparator.comparing(ChannelDto::createdAt))
+        .toList();
   }
 
   @Override
+  @CacheEvict(value = "channelListCache", key = "'public'")
   public ChannelDto update(UUID id, PublicChannelUpdateRequest dto) {
     log.debug("채널 수정 시도: channelId={}", id);
     Channel channel = get(id);
@@ -150,15 +190,18 @@ public class BasicChannelService implements ChannelService {
   @Override
   public void delete(UUID channelId) {
     log.debug("채널 삭제 시도: channelId={}", channelId);
-    if (!channelRepository.existsById(channelId)) {
-      throw new ChannelNotFoundException().addDetail("channelId", channelId);
-    }
+    Channel channel = get(channelId);
     log.debug("채널 삭제 중: 채널 메세지의 첨부파일 제거, channelId={}", channelId);
     binaryContentRepository.bulkDeleteByChannelId(channelId);//첨부파일 삭제시 연관테이블은 자동삭제
     log.debug("채널 삭제 중: 채널 메세지 삭제, channelId={}", channelId);
     messageRepository.bulkDeleteByChannelId(channelId);//메세지 삭제
     channelRepository.deleteById(channelId);
     //readStatusRepository.bulkDeleteByChannelId(channelId);데베 설정으로 자동 삭제
+    if (channel.getType() == ChannelType.PUBLIC) {
+      channelCacheService.removePublicChannelCaches();
+    } else {
+      channelCacheService.removeAllCaches();
+    }
     log.info("채널 삭제 성공: channelId={}", channelId);
   }
 

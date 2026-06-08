@@ -13,6 +13,8 @@ public interface UserMapper {
   @Mapping(source = "isOnline", target = "online")
   UserDto toDto(User user, boolean isOnline);
 
+  @Mapping(source = "isOnline", target = "online")
+  UserDto toDto(UserDto user, boolean isOnline);
 
   default User toEntity(UserCreateRequest dto, String encodedPassword, BinaryContent profile) {
     return User.create(

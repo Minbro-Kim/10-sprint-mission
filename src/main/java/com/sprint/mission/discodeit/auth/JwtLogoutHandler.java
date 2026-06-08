@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
@@ -20,10 +22,17 @@ public class JwtLogoutHandler implements LogoutHandler {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final JwtRegistry jwtRegistry;
+  private final CacheManager cacheManager;
 
   @Override
   public void logout(HttpServletRequest request, HttpServletResponse response,
       Authentication authentication) {
+
+    //사용자 목록 세션 캐시 무효화
+    Cache userListCache = cacheManager.getCache("userListCache");
+    if (userListCache != null) {
+      userListCache.evict("with_session");
+    }
 
     log.debug("로그 아웃 요청");
 
