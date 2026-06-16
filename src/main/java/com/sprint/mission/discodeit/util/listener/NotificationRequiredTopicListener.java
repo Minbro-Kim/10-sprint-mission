@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.util.listener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.auth.enums.Role;
+import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.notification.NotificationCreateRequest;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.event.ErrorNotificationEvent;
@@ -38,14 +39,15 @@ public class NotificationRequiredTopicListener {
       MessageCreatedEvent event = objectMapper.readValue(kafkaEvent,
           MessageCreatedEvent.class);
 
+      MessageDto data = event.data();
       String title =
-          event.authorName() + " (#" + (event.channelName() != null ? event.channelName() :
+          data.author().username() + " (#" + (event.channelName() != null ? event.channelName() :
               ChannelType.PRIVATE) + ")";
-      readStatusRepository.findAllByChannelIdAndNotificationEnabledAndUserIdNot(event.channelId(),
-              true, event.authorId())
+      readStatusRepository.findAllByChannelIdAndNotificationEnabledAndUserIdNot(data.channelId(),
+              true, data.author().id())
           .forEach(r -> {
             notificationService.create(
-                new NotificationCreateRequest(r.getUser().getId(), title, event.content()));
+                new NotificationCreateRequest(r.getUser().getId(), title, data.content()));
           });
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);

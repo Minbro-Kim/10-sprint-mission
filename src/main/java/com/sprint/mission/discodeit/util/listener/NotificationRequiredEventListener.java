@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.util.listener;
 
 import com.sprint.mission.discodeit.auth.enums.Role;
+import com.sprint.mission.discodeit.dto.message.MessageDto;
 import com.sprint.mission.discodeit.dto.notification.NotificationCreateRequest;
 import com.sprint.mission.discodeit.dto.user.UserCreateRequest;
 import com.sprint.mission.discodeit.entity.ChannelType;
@@ -40,13 +41,15 @@ public class NotificationRequiredEventListener {
     //채널이름, 보낸사람, 메세지 내용
     //활성화 리드스테이터스 조회
     //해당 사람들에 대해 알림 생성(본인 제외)
-    String title = event.authorName() + " (#" + (event.channelName() != null ? event.channelName() :
-        ChannelType.PRIVATE) + ")";
-    readStatusRepository.findAllByChannelIdAndNotificationEnabledAndUserIdNot(event.channelId(),
-            true, event.authorId())
+    MessageDto data = event.data();
+    String title =
+        data.author().username() + " (#" + (event.channelName() != null ? event.channelName() :
+            ChannelType.PRIVATE) + ")";
+    readStatusRepository.findAllByChannelIdAndNotificationEnabledAndUserIdNot(data.channelId(),
+            true, data.author().id())
         .forEach(r -> {
           notificationService.create(
-              new NotificationCreateRequest(r.getUser().getId(), title, event.content()));
+              new NotificationCreateRequest(r.getUser().getId(), title, data.content()));
         });
   }
 
