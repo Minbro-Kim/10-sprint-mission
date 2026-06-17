@@ -78,7 +78,7 @@ public class BasicMessageService implements MessageService {
     for (int i = 0; i < binaryContentCreateDtos.size(); i++) {
       applicationEventPublisher.publishEvent(
           new BinaryContentCreatedEvent(attachments.get(i),
-              binaryContentCreateDtos.get(i).bytes()));
+              binaryContentCreateDtos.get(i).bytes(), channel.getId()));
       log.debug("메세지 첨부파일 저장: messageId={}, binaryContentId={}", message.getId(),
           attachments.get(i).getId());
     }

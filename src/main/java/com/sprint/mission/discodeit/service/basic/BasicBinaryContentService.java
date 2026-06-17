@@ -32,7 +32,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   public BinaryContent create(BinaryContentCreateDto dto) {
     BinaryContent content = binaryContentRepository.save(binaryContentMapper.toEntity(dto));
     applicationEventPublisher.publishEvent(
-        new BinaryContentCreatedEvent(content, dto.bytes()));
+        new BinaryContentCreatedEvent(content, dto.bytes(), null));
     //return binaryContentMapper.toDto(content);
     return content;
   }

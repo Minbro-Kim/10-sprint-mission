@@ -8,6 +8,9 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.UserCreatedEvent;
+import com.sprint.mission.discodeit.event.UserDeletedEvent;
+import com.sprint.mission.discodeit.event.UserUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.EmailAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNameAlreadyExistException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -81,14 +84,18 @@ public class BasicUserService implements UserService {
     readStatusRepository.saveAll(readStatuses);
     if (binaryContentCreateDto.isPresent()) {
       applicationEventPublisher.publishEvent(
-          new BinaryContentCreatedEvent(profile, binaryContentCreateDto.get().bytes()));
+          new BinaryContentCreatedEvent(profile, binaryContentCreateDto.get().bytes(), null));
       log.debug("프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
     }
     log.info("사용자 생성 성공: userId={}  hasProfile={}",
         user.getId(),
         user.getProfile() != null
     );
-    return userMapper.toDto(user, userSessionManager.isOnline(user));
+    UserDto response = userMapper.toDto(user, userSessionManager.isOnline(user));
+    applicationEventPublisher.publishEvent(
+        new UserCreatedEvent(response)
+    );
+    return response;
   }
 
   @Transactional(readOnly = true)
@@ -153,14 +160,18 @@ public class BasicUserService implements UserService {
         (dto.password() != null ? passwordEncoder.encode(dto.password()) : null), profile);
     if (binaryContentCreateDto.isPresent()) {//위에서 생성하면 업데이트 실패시 스토리지 저장을 되돌릴수 없기 때문
       applicationEventPublisher.publishEvent(
-          new BinaryContentCreatedEvent(profile, binaryContentCreateDto.get().bytes()));
+          new BinaryContentCreatedEvent(profile, binaryContentCreateDto.get().bytes(), null));
       log.debug("새로운 프로필 이미지 생성: userId={}, profileId={}", user.getId(), profile.getId());
     }
     log.info("사용자 수정 성공: userId={}, changeProfile={}]",
         userId,
         profile != null
     );
-    return userMapper.toDto(user, userSessionManager.isOnline(user));
+    UserDto response = userMapper.toDto(user, userSessionManager.isOnline(user));
+    applicationEventPublisher.publishEvent(
+        new UserUpdatedEvent(response)
+    );
+    return response;
   }
 
   @Override
@@ -175,6 +186,9 @@ public class BasicUserService implements UserService {
     readStatusRepository.deleteByUserId(userId);//삭제된 사용자를 공개채널 멤버나 프라이빗 채널 멤버에서 제거(벌크)
     userRepository.deleteById(userId);
     log.info("사용자 삭제 성공: userId={}", userId);
+    applicationEventPublisher.publishEvent(
+        new UserDeletedEvent(userId)
+    );
   }
 
 

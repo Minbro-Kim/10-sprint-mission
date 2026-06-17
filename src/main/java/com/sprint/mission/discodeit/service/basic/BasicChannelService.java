@@ -11,6 +11,9 @@ import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.ChannelCreatedEvent;
+import com.sprint.mission.discodeit.event.ChannelDeletedEvent;
+import com.sprint.mission.discodeit.event.ChannelUpdatedEvent;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.NotAllowedInPrivateChannelException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -28,7 +31,7 @@ import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -48,6 +51,7 @@ public class BasicChannelService implements ChannelService {
   private final BinaryContentRepository binaryContentRepository;
   private final UserSessionManager userSessionManager;
   private final ChannelCacheService channelCacheService;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Override
   @CacheEvict(value = "channelListCache", key = "'public'")
@@ -64,7 +68,9 @@ public class BasicChannelService implements ChannelService {
         .toList();
     readStatusRepository.saveAll(readStatuses);
     log.info("공개 채널 생성 성공: channelId={}", channel.getId());
-    return channelMapper.toDto(channel, allUsers, null, getOnlineUserIds());
+    ChannelDto response = channelMapper.toDto(channel, allUsers, null, getOnlineUserIds());
+    applicationEventPublisher.publishEvent(new ChannelCreatedEvent(response));
+    return response;
   }
 
   @Override
@@ -86,8 +92,10 @@ public class BasicChannelService implements ChannelService {
     readStatusRepository.saveAll(readStatuses);
     log.info("비공개 채널 생성 성공: channelId={}", channel.getId());
     channelCacheService.removePrivateChannelCaches(Set.copyOf(dto.memberIds()));//해당 멤버 개인채널캐시 삭젠
-    return channelMapper.toDto(channel, members,
+    ChannelDto response = channelMapper.toDto(channel, members,
         null, getOnlineUserIds());
+    applicationEventPublisher.publishEvent(new ChannelCreatedEvent(response));
+    return response;
   }
 
   @Override
@@ -184,7 +192,10 @@ public class BasicChannelService implements ChannelService {
     }
     channel.update(dto.name(), dto.description());
     log.info("공개 채널 수정 성공: channelId={}", channel.getId());
-    return channelMapper.toDto(channel, getMembers(id), getLastMessageAt(id), getOnlineUserIds());
+    ChannelDto response = channelMapper.toDto(channel, getMembers(id), getLastMessageAt(id),
+        getOnlineUserIds());
+    applicationEventPublisher.publishEvent(new ChannelUpdatedEvent(response));
+    return response;
   }
 
   @Override
@@ -203,6 +214,7 @@ public class BasicChannelService implements ChannelService {
       channelCacheService.removeAllCaches();
     }
     log.info("채널 삭제 성공: channelId={}", channelId);
+    applicationEventPublisher.publishEvent(new ChannelDeletedEvent(channelId));
   }
 
 

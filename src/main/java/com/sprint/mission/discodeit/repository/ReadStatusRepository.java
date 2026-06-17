@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.repository;
 
 import com.sprint.mission.discodeit.entity.ReadStatus;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,4 +33,6 @@ public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
 
   List<ReadStatus> findAllByChannelIdAndNotificationEnabledAndUserIdNot(UUID channelId,
       boolean enabled, UUID userId);
+
+  List<ReadStatus> findAllByChannelId(UUID channelId);
 }

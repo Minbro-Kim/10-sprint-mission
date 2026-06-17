@@ -1,6 +1,10 @@
 package com.sprint.mission.discodeit.auth.jwt;
 
+import com.sprint.mission.discodeit.dto.user.UserDto;
+import com.sprint.mission.discodeit.event.UserUpdatedEvent;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -10,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +28,8 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final CacheManager cacheManager;
+  private final ApplicationEventPublisher eventPublisher;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
 
   @Override
@@ -33,11 +40,39 @@ public class InMemoryJwtRegistry implements JwtRegistry {
       queue.poll();
     }
     queue.add(jwtInformation);
+    UserDto userDto = jwtInformation.userDto();
+    eventPublisher.publishEvent(new UserUpdatedEvent(
+        new UserDto(
+            userDto.id(),
+            userDto.username(),
+            userDto.email(),
+            userDto.role(),
+            userDto.profile(),
+            true,
+            userDto.createdAt(),
+            userDto.updatedAt()
+        )
+    ));
   }
 
   @Override
   public void invalidateJwtInformationByUserId(UUID userId) {
-    origin.remove(userId);
+    Queue<JwtInformation> queue = origin.remove(userId);
+    if (queue != null && !queue.isEmpty()) {
+      UserDto userDto = queue.poll().userDto();
+      eventPublisher.publishEvent(new UserUpdatedEvent(
+          new UserDto(
+              userDto.id(),
+              userDto.username(),
+              userDto.email(),
+              userDto.role(),
+              userDto.profile(),
+              false,
+              userDto.createdAt(),
+              userDto.updatedAt()
+          )
+      ));
+    }
   }
 
   @Override
@@ -92,8 +127,17 @@ public class InMemoryJwtRegistry implements JwtRegistry {
       queue.removeIf(i -> !jwtTokenProvider.validateToken(i.refreshToken()));
     });
 
-    boolean hasExpired = origin.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-    if (hasExpired) {
+    List<UUID> targets = new ArrayList<>();
+
+    origin.forEach((userId, queue) -> {
+      if (queue.isEmpty()) {
+        targets.add(userId);
+      }
+    });
+
+    if (!targets.isEmpty()) {
+      targets.forEach(this::invalidateJwtInformationByUserId);
+
       Cache userListCache = cacheManager.getCache("userListCache");
       if (userListCache != null) {
         userListCache.evict("with_session");
