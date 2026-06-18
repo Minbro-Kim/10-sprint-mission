@@ -122,6 +122,7 @@ services:
 networks:
   backend:
     driver: bridge # default, 생략 가능
+    internal: true
   public-net:
     driver: bridge
 
